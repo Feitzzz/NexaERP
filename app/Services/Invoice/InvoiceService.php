@@ -276,7 +276,7 @@ class InvoiceService
     {
         $missing = [];
 
-        foreach (['name', 'email', 'phone', 'tin'] as $field) {
+        foreach (['name', 'email', 'phone'] as $field) {
             if (blank($user->{$field})) {
                 $missing[] = $field;
             }

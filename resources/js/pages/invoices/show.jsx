@@ -1,14 +1,28 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Pencil, Send, Trash2 } from 'lucide-react';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 export default function Show({ invoice }) {
     const supplier = invoice.supplier_snapshot;
     const customerSnapshot = invoice.customer_snapshot;
     const customer = customerSnapshot ?? invoice.customer;
     const isDraft = invoice.status === 'DRAFT';
+    const errors = usePage().props.errors ?? {};
+    const paymentStatusRank = {
+        PENDING: 0,
+        PARTIAL: 1,
+        PAID: 2,
+    };
 
     function destroy() {
         if (confirm(`Delete ${invoice.invoice_number}?`)) {
@@ -18,12 +32,27 @@ export default function Show({ invoice }) {
 
     function issue() {
         if (confirm(`Issue ${invoice.invoice_number}?`)) {
-            router.patch(
+            router.post(
                 `/invoices/${invoice.id}/issue`,
                 {},
                 { preserveScroll: true },
             );
         }
+    }
+
+    function updatePaymentStatus(paymentStatus) {
+        router.patch(
+            `/invoices/${invoice.id}/payment-status`,
+            { payment_status: paymentStatus },
+            { preserveScroll: true },
+        );
+    }
+
+    function isPreviousPaymentStatus(paymentStatus) {
+        return (
+            paymentStatusRank[paymentStatus] <
+            paymentStatusRank[invoice.payment_status]
+        );
     }
 
     return (
@@ -63,6 +92,8 @@ export default function Show({ invoice }) {
                     </div>
                 </div>
 
+                <InputError message={errors.invoice} />
+
                 <div className="grid gap-4 md:grid-cols-3">
                     <Info label="Status">
                         <Badge
@@ -76,9 +107,49 @@ export default function Show({ invoice }) {
                         </Badge>
                     </Info>
                     <Info label="Payment Status">
-                        <Badge variant="secondary">
-                            {invoice.payment_status}
-                        </Badge>
+                        {invoice.status === 'ISSUED' ? (
+                            <div className="space-y-2">
+                                <Select
+                                    value={invoice.payment_status}
+                                    onValueChange={updatePaymentStatus}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem
+                                            value="PENDING"
+                                            disabled={isPreviousPaymentStatus(
+                                                'PENDING',
+                                            )}
+                                        >
+                                            Pending
+                                        </SelectItem>
+                                        <SelectItem
+                                            value="PARTIAL"
+                                            disabled={isPreviousPaymentStatus(
+                                                'PARTIAL',
+                                            )}
+                                        >
+                                            Partial
+                                        </SelectItem>
+                                        <SelectItem
+                                            value="PAID"
+                                            disabled={isPreviousPaymentStatus(
+                                                'PAID',
+                                            )}
+                                        >
+                                            Paid
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.payment_status} />
+                            </div>
+                        ) : (
+                            <Badge variant="secondary">
+                                {invoice.payment_status}
+                            </Badge>
+                        )}
                     </Info>
                     <Info label="Currency">{invoice.currency_code}</Info>
                     <Info label="Issue Date">
@@ -135,7 +206,7 @@ export default function Show({ invoice }) {
                                                 {item.item_name}
                                             </div>
                                             {item.item_description && (
-                                                <div className="max-w-80 text-muted-foreground whitespace-normal">
+                                                <div className="max-w-80 whitespace-normal text-muted-foreground">
                                                     {item.item_description}
                                                 </div>
                                             )}
@@ -247,7 +318,12 @@ function Party({ title, party }) {
                         Phone: {party.phone || 'Not provided'}
                     </div>
                     <div className="text-muted-foreground">
-                        {[party.street, party.city, party.state, party.country_code]
+                        {[
+                            party.street,
+                            party.city,
+                            party.state,
+                            party.country_code,
+                        ]
                             .filter(Boolean)
                             .join(', ') || 'No address'}
                     </div>

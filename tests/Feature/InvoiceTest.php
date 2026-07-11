@@ -123,6 +123,9 @@ test('business cannot access another business invoice', function () {
     $this->actingAs($intruder)->get(route('invoices.edit', $invoice))->assertNotFound();
     $this->actingAs($intruder)->delete(route('invoices.destroy', $invoice))->assertNotFound();
     $this->actingAs($intruder)->patch(route('invoices.issue', $invoice))->assertNotFound();
+    $this->actingAs($intruder)->patch(route('invoices.payment-status', $invoice), [
+        'payment_status' => Invoice::PAYMENT_PAID,
+    ])->assertNotFound();
 });
 
 test('business cannot invoice another business customer or product', function () {
@@ -263,6 +266,107 @@ test('issuing invoice creates snapshots and makes invoice immutable', function (
         ->assertSessionHasErrors('invoice');
 
     expect($invoice->partySnapshots()->count())->toBe(2);
+});
+
+test('frontend-style issue request creates snapshots and issues invoice', function () {
+    $setup = invoiceSetup();
+    $invoice = createInvoiceFor($setup['user'], $setup['customer'], $setup['product']);
+
+    $this->actingAs($setup['user'])
+        ->post(route('invoices.issue', $invoice))
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    $this->assertDatabaseHas('invoices', [
+        'id' => $invoice->id,
+        'status' => Invoice::STATUS_ISSUED,
+    ]);
+
+    $this->assertDatabaseHas('invoice_party_snapshots', [
+        'invoice_id' => $invoice->id,
+        'party_type' => 'SUPPLIER',
+        'name' => 'Acme Limited',
+    ]);
+
+    $this->assertDatabaseHas('invoice_party_snapshots', [
+        'invoice_id' => $invoice->id,
+        'party_type' => 'CUSTOMER',
+        'name' => 'Beta Stores',
+    ]);
+});
+
+test('supplier tin is optional when issuing invoice', function () {
+    $setup = invoiceSetup();
+    $setup['user']->update(['tin' => null]);
+    $invoice = createInvoiceFor($setup['user'], $setup['customer'], $setup['product']);
+
+    $this->actingAs($setup['user'])
+        ->post(route('invoices.issue', $invoice))
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    $this->assertDatabaseHas('invoices', [
+        'id' => $invoice->id,
+        'status' => Invoice::STATUS_ISSUED,
+    ]);
+
+    $this->assertDatabaseHas('invoice_party_snapshots', [
+        'invoice_id' => $invoice->id,
+        'party_type' => 'SUPPLIER',
+        'name' => 'Acme Limited',
+        'tin' => null,
+    ]);
+});
+
+test('issued invoice payment status can be updated', function () {
+    $setup = invoiceSetup();
+    $invoice = createInvoiceFor($setup['user'], $setup['customer'], $setup['product']);
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => Invoice::PAYMENT_PAID,
+        ])
+        ->assertSessionHasErrors('payment_status');
+
+    $this->actingAs($setup['user'])
+        ->post(route('invoices.issue', $invoice))
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => Invoice::PAYMENT_PARTIAL,
+        ])
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    expect($invoice->refresh()->payment_status)->toBe(Invoice::PAYMENT_PARTIAL);
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => Invoice::PAYMENT_PENDING,
+        ])
+        ->assertSessionHasErrors('payment_status');
+
+    expect($invoice->refresh()->payment_status)->toBe(Invoice::PAYMENT_PARTIAL);
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => Invoice::PAYMENT_PAID,
+        ])
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    expect($invoice->refresh()->payment_status)->toBe(Invoice::PAYMENT_PAID);
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => Invoice::PAYMENT_PARTIAL,
+        ])
+        ->assertSessionHasErrors('payment_status');
+
+    expect($invoice->refresh()->payment_status)->toBe(Invoice::PAYMENT_PAID);
+
+    $this->actingAs($setup['user'])
+        ->patch(route('invoices.payment-status', $invoice), [
+            'payment_status' => 'OVERDUE',
+        ])
+        ->assertSessionHasErrors('payment_status');
 });
 
 test('B2B invoices require customer tin', function () {

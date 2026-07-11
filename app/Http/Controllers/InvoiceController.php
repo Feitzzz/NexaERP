@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Services\Invoice\InvoiceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -140,6 +142,51 @@ class InvoiceController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice issued.']);
 
         return redirect()->route('invoices.show', $invoice);
+    }
+
+    public function paymentStatus(Request $request, int $invoice): RedirectResponse
+    {
+        $data = $request->validate([
+            'payment_status' => ['required', Rule::in([
+                Invoice::PAYMENT_PENDING,
+                Invoice::PAYMENT_PARTIAL,
+                Invoice::PAYMENT_PAID,
+            ])],
+        ]);
+
+        $invoice = $this->invoiceForUser($request, $invoice);
+
+        if (! $invoice->isIssued()) {
+            throw ValidationException::withMessages([
+                'payment_status' => 'Only issued invoices can have their payment status updated.',
+            ]);
+        }
+
+        $currentRank = $this->paymentStatusRank($invoice->payment_status);
+        $nextRank = $this->paymentStatusRank($data['payment_status']);
+
+        if ($nextRank < $currentRank) {
+            throw ValidationException::withMessages([
+                'payment_status' => 'Payment status cannot move backward.',
+            ]);
+        }
+
+        $invoice->update([
+            'payment_status' => $data['payment_status'],
+        ]);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Payment status updated.']);
+
+        return redirect()->route('invoices.show', $invoice);
+    }
+
+    private function paymentStatusRank(string $paymentStatus): int
+    {
+        return [
+            Invoice::PAYMENT_PENDING => 0,
+            Invoice::PAYMENT_PARTIAL => 1,
+            Invoice::PAYMENT_PAID => 2,
+        ][$paymentStatus];
     }
 
     /**

@@ -18,7 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('business', [BusinessController::class, 'update'])->name('business.update');
 
     Route::resource('customers', CustomerController::class);
-    Route::patch('invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
+    Route::match(['post', 'patch'], 'invoices/{invoice}/issue', [InvoiceController::class, 'issue'])->name('invoices.issue');
+    Route::patch('invoices/{invoice}/payment-status', [InvoiceController::class, 'paymentStatus'])->name('invoices.payment-status');
     Route::resource('invoices', InvoiceController::class);
     Route::patch('categories/{category}/status', [CategoryController::class, 'status'])->name('categories.status');
     Route::resource('categories', CategoryController::class)->except('show');

@@ -1,7 +1,8 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Eye, Pencil, Plus, Search, Send, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Heading from '@/components/heading';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,9 +26,8 @@ export default function Index({ invoices, customers, filters }) {
     const [issueDateFrom, setIssueDateFrom] = useState(
         filters.issue_date_from ?? '',
     );
-    const [issueDateTo, setIssueDateTo] = useState(
-        filters.issue_date_to ?? '',
-    );
+    const [issueDateTo, setIssueDateTo] = useState(filters.issue_date_to ?? '');
+    const errors = usePage().props.errors ?? {};
 
     function submit(event) {
         event.preventDefault();
@@ -37,8 +37,7 @@ export default function Index({ invoices, customers, filters }) {
             {
                 search,
                 status: status === 'all' ? '' : status,
-                payment_status:
-                    paymentStatus === 'all' ? '' : paymentStatus,
+                payment_status: paymentStatus === 'all' ? '' : paymentStatus,
                 customer_id: customerId === 'all' ? '' : customerId,
                 issue_date_from: issueDateFrom,
                 issue_date_to: issueDateTo,
@@ -55,7 +54,7 @@ export default function Index({ invoices, customers, filters }) {
 
     function issue(invoice) {
         if (confirm(`Issue ${invoice.invoice_number}?`)) {
-            router.patch(
+            router.post(
                 `/invoices/${invoice.id}/issue`,
                 {},
                 { preserveScroll: true },
@@ -152,6 +151,8 @@ export default function Index({ invoices, customers, filters }) {
                     </Button>
                 </form>
 
+                <InputError message={errors.invoice} />
+
                 <div className="overflow-hidden rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
@@ -224,8 +225,7 @@ export default function Index({ invoices, customers, filters }) {
                                                         <Eye />
                                                     </Link>
                                                 </Button>
-                                                {invoice.status ===
-                                                    'DRAFT' && (
+                                                {invoice.status === 'DRAFT' && (
                                                     <>
                                                         <Button
                                                             variant="ghost"
@@ -255,9 +255,7 @@ export default function Index({ invoices, customers, filters }) {
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() =>
-                                                                destroy(
-                                                                    invoice,
-                                                                )
+                                                                destroy(invoice)
                                                             }
                                                             aria-label="Delete invoice"
                                                         >
