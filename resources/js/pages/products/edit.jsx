@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import ProductForm from '@/components/product/product-form';
 
-export default function Edit({ product, categories, units }) {
+export default function Edit({ product, categories, units, taxCategories }) {
     return (
         <>
             <Head title="Edit Product" />
@@ -18,6 +18,7 @@ export default function Edit({ product, categories, units }) {
                         product={product}
                         categories={categories}
                         units={units}
+                        taxCategories={taxCategories}
                     />
                 </div>
             </div>

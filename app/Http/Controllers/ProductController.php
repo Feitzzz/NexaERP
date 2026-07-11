@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
+use App\Models\TaxCategory;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\ProductService;
@@ -21,11 +22,12 @@ class ProductController extends Controller
         $user = $request->user();
         $search = $request->string('search')->toString();
         $categoryId = $request->string('category_id')->toString();
+        $taxCategoryId = $request->string('tax_category_id')->toString();
         $itemType = $request->string('item_type')->toString();
         $status = $request->string('status')->toString();
 
         $products = $user->products()
-            ->with(['category', 'unit'])
+            ->with(['category', 'unit', 'taxCategory'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")
@@ -33,6 +35,15 @@ class ProductController extends Controller
                 });
             })
             ->when($categoryId !== '', fn ($query) => $query->where('category_id', $categoryId))
+            ->when($taxCategoryId !== '', function ($query) use ($taxCategoryId): void {
+                if ($taxCategoryId === 'unclassified') {
+                    $query->whereNull('tax_category_id');
+
+                    return;
+                }
+
+                $query->where('tax_category_id', $taxCategoryId);
+            })
             ->when($itemType !== '', fn ($query) => $query->where('item_type', $itemType))
             ->when($status === 'active', fn ($query) => $query->where('is_active', true))
             ->when($status === 'inactive', fn ($query) => $query->where('is_active', false))
@@ -43,9 +54,11 @@ class ProductController extends Controller
         return Inertia::render('products/index', [
             'products' => $products,
             'categories' => $this->categoryOptions($user),
+            'taxCategories' => $this->taxCategoryOptions(),
             'filters' => [
                 'search' => $search,
                 'category_id' => $categoryId,
+                'tax_category_id' => $taxCategoryId,
                 'item_type' => $itemType,
                 'status' => $status,
             ],
@@ -60,6 +73,7 @@ class ProductController extends Controller
         return Inertia::render('products/create', [
             'categories' => $this->categoryOptions($user),
             'units' => $this->unitOptions(),
+            'taxCategories' => $this->taxCategoryOptions(),
         ]);
     }
 
@@ -81,6 +95,7 @@ class ProductController extends Controller
             'product' => $this->productForUser($request, $product),
             'categories' => $this->categoryOptions($user),
             'units' => $this->unitOptions(),
+            'taxCategories' => $this->taxCategoryOptions(),
         ]);
     }
 
@@ -119,7 +134,7 @@ class ProductController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        return $user->products()->with(['category', 'unit'])->findOrFail($product);
+        return $user->products()->with(['category', 'unit', 'taxCategory'])->findOrFail($product);
     }
 
     /**
@@ -160,6 +175,30 @@ class ProductController extends Controller
                 'id' => $unit->id,
                 'code' => $unit->code,
                 'name' => $unit->name,
+            ];
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return list<array{id: int, code: string, name: string, treatment: string}>
+     */
+    private function taxCategoryOptions(): array
+    {
+        $taxCategories = TaxCategory::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'treatment']);
+
+        $options = [];
+
+        foreach ($taxCategories as $taxCategory) {
+            $options[] = [
+                'id' => $taxCategory->id,
+                'code' => $taxCategory->code,
+                'name' => $taxCategory->name,
+                'treatment' => $taxCategory->treatment,
             ];
         }
 

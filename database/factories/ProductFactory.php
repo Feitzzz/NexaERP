@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\TaxCategory;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,6 +25,7 @@ class ProductFactory extends Factory
             'user_id' => User::factory(),
             'category_id' => Category::factory(),
             'unit_id' => Unit::factory(),
+            'tax_category_id' => TaxCategory::factory(),
             'sku' => 'PRD-'.fake()->unique()->numerify('######'),
             'name' => fake()->words(3, true),
             'description' => fake()->optional()->sentence(),

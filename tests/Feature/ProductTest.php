@@ -2,6 +2,7 @@
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\TaxCategory;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,6 +16,7 @@ function productPayload(Category $category, Unit $unit, array $overrides = []): 
         'name' => 'POS Terminal',
         'category_id' => $category->id,
         'unit_id' => $unit->id,
+        'tax_category_id' => TaxCategory::factory()->create()->id,
         'item_type' => Product::TYPE_PRODUCT,
         'selling_price' => '250000.0000',
         'cost_price' => '200000.0000',
@@ -37,9 +39,25 @@ test('authenticated business can create a product', function () {
         'user_id' => $user->id,
         'category_id' => $category->id,
         'unit_id' => $unit->id,
+        'tax_category_id' => TaxCategory::query()->first()->id,
         'name' => 'POS Terminal',
         'item_type' => Product::TYPE_PRODUCT,
     ]);
+});
+
+test('product requires an active tax category', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create();
+    $unit = Unit::factory()->create();
+    $inactiveTaxCategory = TaxCategory::factory()->create(['is_active' => false]);
+
+    $this->actingAs($user)
+        ->post(route('products.store'), productPayload($category, $unit, [
+            'tax_category_id' => $inactiveTaxCategory->id,
+        ]))
+        ->assertSessionHasErrors('tax_category_id');
+
+    expect(Product::query()->count())->toBe(0);
 });
 
 test('product receives automatic SKU', function () {
@@ -209,6 +227,38 @@ test('category filter works', function () {
     $response->assertInertia(fn (Assert $page) => $page
         ->component('products/index')
         ->where('products.data.0.name', 'Router')
+        ->has('products.data', 1)
+    );
+});
+
+test('tax category filter includes classified and unclassified products', function () {
+    $user = User::factory()->create();
+    $category = Category::factory()->for($user)->create();
+    $unit = Unit::factory()->create();
+    $taxCategory = TaxCategory::factory()->create(['name' => 'Standard VAT']);
+    Product::factory()->for($user)->for($category)->for($unit)->for($taxCategory)->create(['name' => 'Classified']);
+    Product::factory()->for($user)->for($category)->for($unit)->create([
+        'name' => 'Unclassified',
+        'tax_category_id' => null,
+    ]);
+
+    $classified = $this->actingAs($user)->get(route('products.index', [
+        'tax_category_id' => $taxCategory->id,
+    ]));
+
+    $classified->assertInertia(fn (Assert $page) => $page
+        ->component('products/index')
+        ->where('products.data.0.name', 'Classified')
+        ->has('products.data', 1)
+    );
+
+    $unclassified = $this->actingAs($user)->get(route('products.index', [
+        'tax_category_id' => 'unclassified',
+    ]));
+
+    $unclassified->assertInertia(fn (Assert $page) => $page
+        ->component('products/index')
+        ->where('products.data.0.name', 'Unclassified')
         ->has('products.data', 1)
     );
 });

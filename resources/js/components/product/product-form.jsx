@@ -20,12 +20,20 @@ const itemTypes = [
     { value: 'SERVICE', label: 'Service' },
 ];
 
-export default function ProductForm({ product = null, categories, units }) {
+export default function ProductForm({
+    product = null,
+    categories,
+    units,
+    taxCategories,
+}) {
     const isEditing = Boolean(product);
     const { data, setData, post, put, processing, errors } = useForm({
         name: product?.name ?? '',
         category_id: product?.category_id ? String(product.category_id) : '',
         unit_id: product?.unit_id ? String(product.unit_id) : '',
+        tax_category_id: product?.tax_category_id
+            ? String(product.tax_category_id)
+            : '',
         item_type: product?.item_type ?? 'PRODUCT',
         selling_price: product?.selling_price ?? '',
         cost_price: product?.cost_price ?? '',
@@ -133,6 +141,31 @@ export default function ProductForm({ product = null, categories, units }) {
                         </SelectContent>
                     </Select>
                     <InputError message={errors.unit_id} />
+                </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="tax_category_id">Tax Category</Label>
+                    <Select
+                        value={data.tax_category_id}
+                        onValueChange={(value) =>
+                            setData('tax_category_id', value)
+                        }
+                    >
+                        <SelectTrigger id="tax_category_id" className="w-full">
+                            <SelectValue placeholder="Select tax category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {taxCategories.map((taxCategory) => (
+                                <SelectItem
+                                    key={taxCategory.id}
+                                    value={String(taxCategory.id)}
+                                >
+                                    {taxCategory.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.tax_category_id} />
                 </div>
 
                 <Field label="Selling Price" error={errors.selling_price}>

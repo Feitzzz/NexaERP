@@ -30,7 +30,7 @@ class CustomerFactory extends Factory
             'street' => fake()->streetAddress(),
             'city' => fake()->city(),
             'lga' => fake()->optional()->city(),
-            'state' => fake()->state(),
+            'state' => fake()->city(),
             'postal_code' => fake()->optional()->postcode(),
             'country' => 'Nigeria',
             'is_active' => true,

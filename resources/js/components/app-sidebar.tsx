@@ -3,9 +3,11 @@ import {
     BookOpen,
     Boxes,
     Building2,
+    FileText,
     FolderGit2,
     LayoutGrid,
     Tags,
+    ReceiptText,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -41,6 +43,11 @@ const mainNavItems: NavItem[] = [
         icon: Users,
     },
     {
+        title: 'Invoices',
+        href: '/invoices',
+        icon: FileText,
+    },
+    {
         title: 'Categories',
         href: '/categories',
         icon: Tags,
@@ -49,6 +56,11 @@ const mainNavItems: NavItem[] = [
         title: 'Products',
         href: '/products',
         icon: Boxes,
+    },
+    {
+        title: 'Taxes',
+        href: '/taxes',
+        icon: ReceiptText,
     },
 ];
 

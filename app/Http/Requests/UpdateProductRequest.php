@@ -31,6 +31,11 @@ class UpdateProductRequest extends FormRequest
                 Rule::exists('categories', 'id')->where('user_id', $this->user()?->id),
             ],
             'unit_id' => ['required', 'integer', Rule::exists('units', 'id')],
+            'tax_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('tax_categories', 'id')->where('is_active', true),
+            ],
             'item_type' => ['required', Rule::in([Product::TYPE_PRODUCT, Product::TYPE_SERVICE])],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],

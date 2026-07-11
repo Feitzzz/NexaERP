@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProductService
 {
@@ -52,6 +53,12 @@ class ProductService
 
     public function delete(Product $product): bool
     {
+        if ($product->invoiceItems()->exists()) {
+            throw ValidationException::withMessages([
+                'product' => 'This product cannot be deleted because it is referenced by one or more invoices. Deactivate it instead.',
+            ]);
+        }
+
         return (bool) $product->delete();
     }
 
@@ -71,6 +78,7 @@ class ProductService
         return [
             'category_id' => $data['category_id'],
             'unit_id' => $data['unit_id'],
+            'tax_category_id' => $data['tax_category_id'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'item_type' => $data['item_type'],

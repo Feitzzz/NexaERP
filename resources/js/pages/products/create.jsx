@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import Heading from '@/components/heading';
 import ProductForm from '@/components/product/product-form';
 
-export default function Create({ categories, units }) {
+export default function Create({ categories, units, taxCategories }) {
     return (
         <>
             <Head title="Create Product" />
@@ -14,7 +14,11 @@ export default function Create({ categories, units }) {
                 />
 
                 <div className="rounded-lg border border-sidebar-border/70 p-6 dark:border-sidebar-border">
-                    <ProductForm categories={categories} units={units} />
+                    <ProductForm
+                        categories={categories}
+                        units={units}
+                        taxCategories={taxCategories}
+                    />
                 </div>
             </div>
         </>

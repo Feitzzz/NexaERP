@@ -13,10 +13,18 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-export default function Index({ products, categories, filters }) {
+export default function Index({
+    products,
+    categories,
+    taxCategories,
+    filters,
+}) {
     const [search, setSearch] = useState(filters.search ?? '');
     const [categoryId, setCategoryId] = useState(
         filters.category_id ? String(filters.category_id) : 'all',
+    );
+    const [taxCategoryId, setTaxCategoryId] = useState(
+        filters.tax_category_id ? String(filters.tax_category_id) : 'all',
     );
     const [itemType, setItemType] = useState(filters.item_type || 'all');
     const [status, setStatus] = useState(filters.status || 'all');
@@ -29,6 +37,7 @@ export default function Index({ products, categories, filters }) {
             {
                 search,
                 category_id: categoryId === 'all' ? '' : categoryId,
+                tax_category_id: taxCategoryId === 'all' ? '' : taxCategoryId,
                 item_type: itemType === 'all' ? '' : itemType,
                 status: status === 'all' ? '' : status,
             },
@@ -76,7 +85,7 @@ export default function Index({ products, categories, filters }) {
                     </Button>
                 </div>
 
-                <form onSubmit={submit} className="grid gap-3 lg:grid-cols-5">
+                <form onSubmit={submit} className="grid gap-3 lg:grid-cols-6">
                     <Input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
@@ -111,6 +120,31 @@ export default function Index({ products, categories, filters }) {
                         </SelectContent>
                     </Select>
 
+                    <Select
+                        value={taxCategoryId}
+                        onValueChange={setTaxCategoryId}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">
+                                All Tax Categories
+                            </SelectItem>
+                            {taxCategories.map((taxCategory) => (
+                                <SelectItem
+                                    key={taxCategory.id}
+                                    value={String(taxCategory.id)}
+                                >
+                                    {taxCategory.name}
+                                </SelectItem>
+                            ))}
+                            <SelectItem value="unclassified">
+                                Unclassified
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+
                     <Select value={status} onValueChange={setStatus}>
                         <SelectTrigger className="w-full">
                             <SelectValue />
@@ -137,6 +171,7 @@ export default function Index({ products, categories, filters }) {
                                     <Th>Name</Th>
                                     <Th>Category</Th>
                                     <Th>Type</Th>
+                                    <Th>Tax Category</Th>
                                     <Th>Unit</Th>
                                     <Th>Selling Price</Th>
                                     <Th>Status</Th>
@@ -147,7 +182,7 @@ export default function Index({ products, categories, filters }) {
                                 {products.data.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan="8"
+                                            colSpan="9"
                                             className="px-4 py-8 text-center text-muted-foreground"
                                         >
                                             No products found.
@@ -166,6 +201,10 @@ export default function Index({ products, categories, filters }) {
                                         <Td>{product.name}</Td>
                                         <Td>{product.category.name}</Td>
                                         <Td>{formatType(product.item_type)}</Td>
+                                        <Td>
+                                            {product.tax_category?.name ??
+                                                'Unclassified'}
+                                        </Td>
                                         <Td>{product.unit.code}</Td>
                                         <Td>
                                             {formatMoney(product.selling_price)}

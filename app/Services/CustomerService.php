@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CustomerService
 {
@@ -39,7 +40,15 @@ class CustomerService
 
     public function delete(Customer $customer): bool
     {
-        return DB::transaction(fn (): bool => (bool) $customer->delete());
+        return DB::transaction(function () use ($customer): bool {
+            if ($customer->invoices()->exists()) {
+                throw ValidationException::withMessages([
+                    'customer' => 'This customer cannot be deleted because it is referenced by one or more invoices.',
+                ]);
+            }
+
+            return (bool) $customer->delete();
+        });
     }
 
     private function nextCustomerCode(): string

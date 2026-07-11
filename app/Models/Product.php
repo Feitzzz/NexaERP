@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'user_id',
     'category_id',
     'unit_id',
+    'tax_category_id',
     'sku',
     'name',
     'description',
@@ -65,5 +67,21 @@ class Product extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    /**
+     * @return BelongsTo<TaxCategory, $this>
+     */
+    public function taxCategory(): BelongsTo
+    {
+        return $this->belongsTo(TaxCategory::class);
+    }
+
+    /**
+     * @return HasMany<InvoiceItem, $this>
+     */
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany(InvoiceItem::class);
     }
 }
