@@ -12,11 +12,8 @@ class CategoryService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function store(array $data): Category
+    public function store(User $user, array $data): Category
     {
-        /** @var User $user */
-        $user = auth()->user();
-
         return Category::create([
             ...$this->categoryData($data),
             'user_id' => $user->id,
@@ -26,15 +23,17 @@ class CategoryService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function update(Category $category, array $data): Category
+    public function update(User $user, Category $category, array $data): Category
     {
+        $category = $this->owned($user, $category);
         $category->update($this->categoryData($data));
 
         return $category->refresh();
     }
 
-    public function toggleStatus(Category $category): Category
+    public function toggleStatus(User $user, Category $category): Category
     {
+        $category = $this->owned($user, $category);
         $category->update([
             'is_active' => ! $category->is_active,
         ]);
@@ -45,9 +44,11 @@ class CategoryService
     /**
      * @throws ValidationException
      */
-    public function delete(Category $category): bool
+    public function delete(User $user, Category $category): bool
     {
-        return DB::transaction(function () use ($category): bool {
+        return DB::transaction(function () use ($user, $category): bool {
+            $category = $this->owned($user, $category);
+
             if ($category->products()->exists()) {
                 throw ValidationException::withMessages([
                     'category' => 'This category cannot be deleted because it contains products.',
@@ -56,6 +57,11 @@ class CategoryService
 
             return (bool) $category->delete();
         });
+    }
+
+    private function owned(User $user, Category $category): Category
+    {
+        return $user->categories()->whereKey($category->id)->firstOrFail();
     }
 
     /**

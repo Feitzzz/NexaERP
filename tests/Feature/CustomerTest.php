@@ -183,10 +183,10 @@ test('users cannot manage customers owned by another user', function () {
     $otherUser = User::factory()->create();
     $customer = Customer::factory()->for($owner)->create();
 
-    $this->actingAs($otherUser)->get(route('customers.show', $customer))->assertForbidden();
-    $this->actingAs($otherUser)->get(route('customers.edit', $customer))->assertForbidden();
-    $this->actingAs($otherUser)->put(route('customers.update', $customer), customerPayload())->assertForbidden();
-    $this->actingAs($otherUser)->delete(route('customers.destroy', $customer))->assertForbidden();
+    $this->actingAs($otherUser)->get(route('customers.show', $customer))->assertNotFound();
+    $this->actingAs($otherUser)->get(route('customers.edit', $customer))->assertNotFound();
+    $this->actingAs($otherUser)->put(route('customers.update', $customer), customerPayload())->assertNotFound();
+    $this->actingAs($otherUser)->delete(route('customers.destroy', $customer))->assertNotFound();
 });
 
 test('customer index only includes customers owned by authenticated user', function () {

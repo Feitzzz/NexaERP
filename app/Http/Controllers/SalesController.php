@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Product;
 use App\Services\Sales\SalesSummaryService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,6 +15,10 @@ class SalesController extends Controller
 {
     public function index(Request $request, SalesSummaryService $service): Response
     {
+        $this->authorize('viewAny', Invoice::class);
+        $this->authorize('viewAny', Customer::class);
+        $this->authorize('viewAny', Product::class);
+
         $filters = $request->validate([
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],

@@ -16,6 +16,8 @@ class CategoryController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Category::class);
+
         /** @var User $user */
         $user = $request->user();
         $search = $request->string('search')->toString();
@@ -39,46 +41,66 @@ class CategoryController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Category::class);
+
         return Inertia::render('categories/create');
     }
 
     public function store(StoreCategoryRequest $request, CategoryService $categoryService): RedirectResponse
     {
-        $categoryService->store($request->validated());
+        $this->authorize('create', Category::class);
+
+        /** @var User $user */
+        $user = $request->user();
+        $categoryService->store($user, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category created.']);
 
         return redirect()->route('categories.index');
     }
 
-    public function edit(Request $request, int $category): Response
+    public function edit(Category $category): Response
     {
+        $this->authorize('update', $category);
+
         return Inertia::render('categories/edit', [
-            'category' => $this->categoryForUser($request, $category),
+            'category' => $category,
         ]);
     }
 
-    public function update(UpdateCategoryRequest $request, int $category, CategoryService $categoryService): RedirectResponse
+    public function update(UpdateCategoryRequest $request, Category $category, CategoryService $categoryService): RedirectResponse
     {
-        $categoryService->update($this->categoryForUser($request, $category), $request->validated());
+        $this->authorize('update', $category);
+
+        /** @var User $user */
+        $user = $request->user();
+        $categoryService->update($user, $category, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category updated.']);
 
         return redirect()->route('categories.index');
     }
 
-    public function destroy(Request $request, int $category, CategoryService $categoryService): RedirectResponse
+    public function destroy(Request $request, Category $category, CategoryService $categoryService): RedirectResponse
     {
-        $categoryService->delete($this->categoryForUser($request, $category));
+        $this->authorize('delete', $category);
+
+        /** @var User $user */
+        $user = $request->user();
+        $categoryService->delete($user, $category);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Category deleted.']);
 
         return redirect()->route('categories.index');
     }
 
-    public function status(Request $request, int $category, CategoryService $categoryService): RedirectResponse
+    public function status(Request $request, Category $category, CategoryService $categoryService): RedirectResponse
     {
-        $category = $categoryService->toggleStatus($this->categoryForUser($request, $category));
+        $this->authorize('changeStatus', $category);
+
+        /** @var User $user */
+        $user = $request->user();
+        $category = $categoryService->toggleStatus($user, $category);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -86,13 +108,5 @@ class CategoryController extends Controller
         ]);
 
         return back();
-    }
-
-    private function categoryForUser(Request $request, int $category): Category
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        return $user->categories()->findOrFail($category);
     }
 }

@@ -151,11 +151,11 @@ test('posted adjustments cannot be changed deleted or posted twice', function ()
     $this->actingAs($setup['user'])->post(route('inventory-adjustments.post', $adjustment));
 
     $this->actingAs($setup['user'])->put(route('inventory-adjustments.update', $adjustment), adjustmentPayload($setup, '20'))
-        ->assertSessionHasErrors('adjustment');
+        ->assertForbidden();
     $this->actingAs($setup['user'])->delete(route('inventory-adjustments.destroy', $adjustment))
-        ->assertSessionHasErrors('adjustment');
+        ->assertForbidden();
     $this->actingAs($setup['user'])->post(route('inventory-adjustments.post', $adjustment))
-        ->assertSessionHasErrors('adjustment');
+        ->assertForbidden();
 
     expect(StockMovement::query()->count())->toBe(1);
 });
@@ -221,7 +221,7 @@ test('issued tracked-product invoice reduces stock exactly once', function () {
         ->and($invoice->refresh()->stock_posted_at)->not->toBeNull()
         ->and(StockMovement::query()->where('movement_type', StockMovement::SALE_ISSUE)->count())->toBe(1);
 
-    $this->actingAs($setup['user'])->post(route('invoices.issue', $invoice))->assertSessionHasErrors('invoice');
+    $this->actingAs($setup['user'])->post(route('invoices.issue', $invoice))->assertForbidden();
     expect(InventoryBalance::query()->value('quantity_on_hand'))->toBe('7.0000');
 });
 

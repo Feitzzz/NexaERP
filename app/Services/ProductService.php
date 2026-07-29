@@ -12,11 +12,10 @@ class ProductService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function store(array $data): Product
+    public function store(User $user, array $data): Product
     {
-        return DB::transaction(function () use ($data): Product {
-            /** @var User $user */
-            $user = auth()->user();
+        return DB::transaction(function () use ($user, $data): Product {
+            $this->ensureOwnedCategory($user, (int) $data['category_id']);
 
             $product = Product::create([
                 ...$this->productData($data),
@@ -35,15 +34,18 @@ class ProductService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function update(Product $product, array $data): Product
+    public function update(User $user, Product $product, array $data): Product
     {
+        $product = $this->owned($user, $product);
+        $this->ensureOwnedCategory($user, (int) $data['category_id']);
         $product->update($this->productData($data));
 
         return $product->refresh();
     }
 
-    public function toggleStatus(Product $product): Product
+    public function toggleStatus(User $user, Product $product): Product
     {
+        $product = $this->owned($user, $product);
         $product->update([
             'is_active' => ! $product->is_active,
         ]);
@@ -51,8 +53,10 @@ class ProductService
         return $product->refresh();
     }
 
-    public function delete(Product $product): bool
+    public function delete(User $user, Product $product): bool
     {
+        $product = $this->owned($user, $product);
+
         if ($product->invoiceItems()->exists()
             || $product->inventoryBalances()->exists()
             || $product->stockMovements()->exists()
@@ -63,6 +67,16 @@ class ProductService
         }
 
         return (bool) $product->delete();
+    }
+
+    private function owned(User $user, Product $product): Product
+    {
+        return $user->products()->whereKey($product->id)->firstOrFail();
+    }
+
+    private function ensureOwnedCategory(User $user, int $categoryId): void
+    {
+        $user->categories()->whereKey($categoryId)->firstOrFail();
     }
 
     private function skuFor(Product $product): string

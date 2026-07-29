@@ -12,12 +12,9 @@ class CustomerService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function store(array $data): Customer
+    public function store(User $user, array $data): Customer
     {
-        return DB::transaction(function () use ($data): Customer {
-            /** @var User $user */
-            $user = auth()->user();
-
+        return DB::transaction(function () use ($user, $data): Customer {
             return Customer::create([
                 ...$this->customerData($data),
                 'user_id' => $user->id,
@@ -29,18 +26,21 @@ class CustomerService
     /**
      * @param  array<string, mixed>  $data
      */
-    public function update(Customer $customer, array $data): Customer
+    public function update(User $user, Customer $customer, array $data): Customer
     {
-        return DB::transaction(function () use ($customer, $data): Customer {
+        return DB::transaction(function () use ($user, $customer, $data): Customer {
+            $customer = $this->owned($user, $customer);
             $customer->update($this->customerData($data));
 
             return $customer->refresh();
         });
     }
 
-    public function delete(Customer $customer): bool
+    public function delete(User $user, Customer $customer): bool
     {
-        return DB::transaction(function () use ($customer): bool {
+        return DB::transaction(function () use ($user, $customer): bool {
+            $customer = $this->owned($user, $customer);
+
             if ($customer->invoices()->exists()) {
                 throw ValidationException::withMessages([
                     'customer' => 'This customer cannot be deleted because it is referenced by one or more invoices.',
@@ -49,6 +49,11 @@ class CustomerService
 
             return (bool) $customer->delete();
         });
+    }
+
+    private function owned(User $user, Customer $customer): Customer
+    {
+        return $user->customers()->whereKey($customer->id)->firstOrFail();
     }
 
     private function nextCustomerCode(): string

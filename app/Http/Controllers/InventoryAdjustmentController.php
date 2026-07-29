@@ -18,6 +18,8 @@ class InventoryAdjustmentController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', InventoryAdjustment::class);
+
         return Inertia::render('inventory-adjustments/index', [
             'adjustments' => $request->user()->inventoryAdjustments()
                 ->with('warehouse')->latest()->paginate(25),
@@ -26,11 +28,15 @@ class InventoryAdjustmentController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', InventoryAdjustment::class);
+
         return Inertia::render('inventory-adjustments/create', $this->options($request));
     }
 
     public function store(StoreInventoryAdjustmentRequest $request, InventoryAdjustmentService $service): RedirectResponse
     {
+        $this->authorize('create', InventoryAdjustment::class);
+
         /** @var User $user */
         $user = $request->user();
         $adjustment = $service->store($user, $request->validated());
@@ -39,10 +45,11 @@ class InventoryAdjustmentController extends Controller
         return redirect()->route('inventory-adjustments.show', $adjustment);
     }
 
-    public function show(Request $request, int $inventoryAdjustment): Response
+    public function show(Request $request, InventoryAdjustment $inventoryAdjustment): Response
     {
-        $adjustment = $this->owned($request, $inventoryAdjustment)
-            ->load(['warehouse', 'lines.product']);
+        $this->authorize('view', $inventoryAdjustment);
+
+        $adjustment = $inventoryAdjustment->load(['warehouse', 'lines.product']);
         $lineIds = $adjustment->lines->pluck('id');
 
         return Inertia::render('inventory-adjustments/show', [
@@ -53,10 +60,11 @@ class InventoryAdjustmentController extends Controller
         ]);
     }
 
-    public function edit(Request $request, int $inventoryAdjustment): Response
+    public function edit(Request $request, InventoryAdjustment $inventoryAdjustment): Response
     {
-        $adjustment = $this->owned($request, $inventoryAdjustment)->load('lines');
-        abort_unless($adjustment->isDraft(), 403, 'Posted adjustments are immutable.');
+        $this->authorize('update', $inventoryAdjustment);
+
+        $adjustment = $inventoryAdjustment->load('lines');
 
         return Inertia::render('inventory-adjustments/edit', [
             'adjustment' => $adjustment,
@@ -66,22 +74,26 @@ class InventoryAdjustmentController extends Controller
 
     public function update(
         UpdateInventoryAdjustmentRequest $request,
-        int $inventoryAdjustment,
+        InventoryAdjustment $inventoryAdjustment,
         InventoryAdjustmentService $service
     ): RedirectResponse {
+        $this->authorize('update', $inventoryAdjustment);
+
         /** @var User $user */
         $user = $request->user();
-        $adjustment = $service->update($user, $this->owned($request, $inventoryAdjustment), $request->validated());
+        $adjustment = $service->update($user, $inventoryAdjustment, $request->validated());
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Stock adjustment updated.']);
 
         return redirect()->route('inventory-adjustments.show', $adjustment);
     }
 
-    public function destroy(Request $request, int $inventoryAdjustment, InventoryAdjustmentService $service): RedirectResponse
+    public function destroy(Request $request, InventoryAdjustment $inventoryAdjustment, InventoryAdjustmentService $service): RedirectResponse
     {
+        $this->authorize('delete', $inventoryAdjustment);
+
         /** @var User $user */
         $user = $request->user();
-        $service->delete($user, $this->owned($request, $inventoryAdjustment));
+        $service->delete($user, $inventoryAdjustment);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Stock adjustment deleted.']);
 
         return redirect()->route('inventory-adjustments.index');
@@ -89,20 +101,17 @@ class InventoryAdjustmentController extends Controller
 
     public function post(
         PostInventoryAdjustmentRequest $request,
-        int $inventoryAdjustment,
+        InventoryAdjustment $inventoryAdjustment,
         InventoryAdjustmentService $service
     ): RedirectResponse {
+        $this->authorize('post', $inventoryAdjustment);
+
         /** @var User $user */
         $user = $request->user();
-        $adjustment = $service->post($user, $this->owned($request, $inventoryAdjustment));
+        $adjustment = $service->post($user, $inventoryAdjustment);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Stock adjustment posted.']);
 
         return redirect()->route('inventory-adjustments.show', $adjustment);
-    }
-
-    private function owned(Request $request, int $id): InventoryAdjustment
-    {
-        return $request->user()->inventoryAdjustments()->whereKey($id)->firstOrFail();
     }
 
     /** @return array<string, mixed> */

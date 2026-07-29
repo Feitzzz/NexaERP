@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Services\CustomerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +16,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request): Response
     {
-        Gate::authorize('viewAny', Customer::class);
+        $this->authorize('viewAny', Customer::class);
 
         /** @var User $user */
         $user = $request->user();
@@ -47,23 +46,25 @@ class CustomerController extends Controller
 
     public function create(): Response
     {
-        Gate::authorize('create', Customer::class);
+        $this->authorize('create', Customer::class);
 
         return Inertia::render('customers/create');
     }
 
     public function store(StoreCustomerRequest $request, CustomerService $customerService): RedirectResponse
     {
-        Gate::authorize('create', Customer::class);
+        $this->authorize('create', Customer::class);
 
-        $customer = $customerService->store($request->validated());
+        /** @var User $user */
+        $user = $request->user();
+        $customer = $customerService->store($user, $request->validated());
 
         return redirect()->route('customers.show', $customer)->with('status', 'Customer created.');
     }
 
     public function show(Customer $customer): Response
     {
-        Gate::authorize('view', $customer);
+        $this->authorize('view', $customer);
 
         return Inertia::render('customers/show', [
             'customer' => $customer,
@@ -72,7 +73,7 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): Response
     {
-        Gate::authorize('update', $customer);
+        $this->authorize('update', $customer);
 
         return Inertia::render('customers/edit', [
             'customer' => $customer,
@@ -81,18 +82,22 @@ class CustomerController extends Controller
 
     public function update(UpdateCustomerRequest $request, Customer $customer, CustomerService $customerService): RedirectResponse
     {
-        Gate::authorize('update', $customer);
+        $this->authorize('update', $customer);
 
-        $customerService->update($customer, $request->validated());
+        /** @var User $user */
+        $user = $request->user();
+        $customerService->update($user, $customer, $request->validated());
 
         return redirect()->route('customers.show', $customer)->with('status', 'Customer updated.');
     }
 
-    public function destroy(Customer $customer, CustomerService $customerService): RedirectResponse
+    public function destroy(Request $request, Customer $customer, CustomerService $customerService): RedirectResponse
     {
-        Gate::authorize('delete', $customer);
+        $this->authorize('delete', $customer);
 
-        $customerService->delete($customer);
+        /** @var User $user */
+        $user = $request->user();
+        $customerService->delete($user, $customer);
 
         return redirect()->route('customers.index')->with('status', 'Customer deleted.');
     }

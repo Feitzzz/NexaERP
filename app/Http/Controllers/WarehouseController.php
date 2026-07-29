@@ -17,6 +17,8 @@ class WarehouseController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Warehouse::class);
+
         return Inertia::render('warehouses/index', [
             'warehouses' => $request->user()->warehouses()->latest()->paginate(25),
         ]);
@@ -24,11 +26,15 @@ class WarehouseController extends Controller
 
     public function create(): Response
     {
+        $this->authorize('create', Warehouse::class);
+
         return Inertia::render('warehouses/create');
     }
 
     public function store(StoreWarehouseRequest $request): RedirectResponse
     {
+        $this->authorize('create', Warehouse::class);
+
         /** @var User $user */
         $user = $request->user();
         DB::transaction(function () use ($user, $request): void {
@@ -45,30 +51,34 @@ class WarehouseController extends Controller
         return redirect()->route('warehouses.index');
     }
 
-    public function edit(Request $request, int $warehouse): Response
+    public function edit(Warehouse $warehouse): Response
     {
-        return Inertia::render('warehouses/edit', ['warehouse' => $this->owned($request, $warehouse)]);
+        $this->authorize('update', $warehouse);
+
+        return Inertia::render('warehouses/edit', ['warehouse' => $warehouse]);
     }
 
-    public function update(UpdateWarehouseRequest $request, int $warehouse): RedirectResponse
+    public function update(UpdateWarehouseRequest $request, Warehouse $warehouse): RedirectResponse
     {
-        $model = $this->owned($request, $warehouse);
-        DB::transaction(function () use ($request, $model): void {
+        $this->authorize('update', $warehouse);
+
+        DB::transaction(function () use ($request, $warehouse): void {
             User::query()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $data = $request->validated();
             if ($data['is_default'] ?? false) {
-                $request->user()->warehouses()->whereKeyNot($model->id)->update(['is_default' => false]);
+                $request->user()->warehouses()->whereKeyNot($warehouse->id)->update(['is_default' => false]);
             }
-            $model->update($data);
+            $warehouse->update($data);
         });
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Warehouse updated.']);
 
         return redirect()->route('warehouses.index');
     }
 
-    public function destroy(Request $request, int $warehouse): RedirectResponse
+    public function destroy(Warehouse $warehouse): RedirectResponse
     {
-        $warehouse = $this->owned($request, $warehouse);
+        $this->authorize('delete', $warehouse);
+
         if ($warehouse->inventoryBalances()->exists() || $warehouse->stockMovements()->exists()
             || $warehouse->inventoryAdjustments()->exists() || $warehouse->invoices()->exists()) {
             throw ValidationException::withMessages(['warehouse' => 'This warehouse has operational history and cannot be deleted. Deactivate it instead.']);
@@ -79,9 +89,10 @@ class WarehouseController extends Controller
         return redirect()->route('warehouses.index');
     }
 
-    public function default(Request $request, int $warehouse): RedirectResponse
+    public function default(Request $request, Warehouse $warehouse): RedirectResponse
     {
-        $warehouse = $this->owned($request, $warehouse);
+        $this->authorize('makeDefault', $warehouse);
+
         DB::transaction(function () use ($request, $warehouse): void {
             User::query()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             $request->user()->warehouses()->update(['is_default' => false]);
@@ -92,17 +103,13 @@ class WarehouseController extends Controller
         return back();
     }
 
-    public function status(Request $request, int $warehouse): RedirectResponse
+    public function status(Warehouse $warehouse): RedirectResponse
     {
-        $warehouse = $this->owned($request, $warehouse);
+        $this->authorize('changeStatus', $warehouse);
+
         $warehouse->update(['is_active' => ! $warehouse->is_active]);
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Warehouse status updated.']);
 
         return back();
-    }
-
-    private function owned(Request $request, int $id): Warehouse
-    {
-        return $request->user()->warehouses()->whereKey($id)->firstOrFail();
     }
 }

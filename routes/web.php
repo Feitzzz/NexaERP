@@ -38,7 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('inventory-adjustments/{inventoryAdjustment}/post', [InventoryAdjustmentController::class, 'post'])
         ->name('inventory-adjustments.post');
-    Route::resource('inventory-adjustments', InventoryAdjustmentController::class);
+    Route::resource('inventory-adjustments', InventoryAdjustmentController::class)
+        ->parameters(['inventory-adjustments' => 'inventoryAdjustment']);
     Route::get('sales', [SalesController::class, 'index'])->name('sales.index');
 });
 

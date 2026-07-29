@@ -18,6 +18,8 @@ class ProductController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Product::class);
+
         /** @var User $user */
         $user = $request->user();
         $search = $request->string('search')->toString();
@@ -68,6 +70,8 @@ class ProductController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', Product::class);
+
         /** @var User $user */
         $user = $request->user();
 
@@ -80,47 +84,65 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request, ProductService $productService): RedirectResponse
     {
-        $productService->store($request->validated());
+        $this->authorize('create', Product::class);
+
+        /** @var User $user */
+        $user = $request->user();
+        $productService->store($user, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Product created.']);
 
         return redirect()->route('products.index');
     }
 
-    public function edit(Request $request, int $product): Response
+    public function edit(Request $request, Product $product): Response
     {
+        $this->authorize('update', $product);
+
         /** @var User $user */
         $user = $request->user();
 
         return Inertia::render('products/edit', [
-            'product' => $this->productForUser($request, $product),
+            'product' => $product->load(['category', 'unit', 'taxCategory']),
             'categories' => $this->categoryOptions($user),
             'units' => $this->unitOptions(),
             'taxCategories' => $this->taxCategoryOptions(),
         ]);
     }
 
-    public function update(UpdateProductRequest $request, int $product, ProductService $productService): RedirectResponse
+    public function update(UpdateProductRequest $request, Product $product, ProductService $productService): RedirectResponse
     {
-        $productService->update($this->productForUser($request, $product), $request->validated());
+        $this->authorize('update', $product);
+
+        /** @var User $user */
+        $user = $request->user();
+        $productService->update($user, $product, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Product updated.']);
 
         return redirect()->route('products.index');
     }
 
-    public function destroy(Request $request, int $product, ProductService $productService): RedirectResponse
+    public function destroy(Request $request, Product $product, ProductService $productService): RedirectResponse
     {
-        $productService->delete($this->productForUser($request, $product));
+        $this->authorize('delete', $product);
+
+        /** @var User $user */
+        $user = $request->user();
+        $productService->delete($user, $product);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Product deleted.']);
 
         return redirect()->route('products.index');
     }
 
-    public function status(Request $request, int $product, ProductService $productService): RedirectResponse
+    public function status(Request $request, Product $product, ProductService $productService): RedirectResponse
     {
-        $product = $productService->toggleStatus($this->productForUser($request, $product));
+        $this->authorize('changeStatus', $product);
+
+        /** @var User $user */
+        $user = $request->user();
+        $product = $productService->toggleStatus($user, $product);
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -128,14 +150,6 @@ class ProductController extends Controller
         ]);
 
         return back();
-    }
-
-    private function productForUser(Request $request, int $product): Product
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        return $user->products()->with(['category', 'unit', 'taxCategory'])->findOrFail($product);
     }
 
     /**

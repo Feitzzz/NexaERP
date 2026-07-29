@@ -21,6 +21,8 @@ class InvoiceController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Invoice::class);
+
         /** @var User $user */
         $user = $request->user();
         $search = $request->string('search')->toString();
@@ -63,6 +65,8 @@ class InvoiceController extends Controller
 
     public function create(Request $request): Response
     {
+        $this->authorize('create', Invoice::class);
+
         /** @var User $user */
         $user = $request->user();
 
@@ -76,6 +80,8 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request, InvoiceService $invoiceService): RedirectResponse
     {
+        $this->authorize('create', Invoice::class);
+
         /** @var User $user */
         $user = $request->user();
         $invoice = $invoiceService->store($user, $request->validated());
@@ -85,9 +91,11 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.show', $invoice);
     }
 
-    public function show(Request $request, int $invoice): Response
+    public function show(Invoice $invoice): Response
     {
-        $invoice = $this->invoiceForUser($request, $invoice, [
+        $this->authorize('view', $invoice);
+
+        $invoice->load([
             'customer',
             'items',
             'supplierSnapshot',
@@ -104,13 +112,13 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function edit(Request $request, int $invoice): Response
+    public function edit(Request $request, Invoice $invoice): Response
     {
+        $this->authorize('update', $invoice);
+
         /** @var User $user */
         $user = $request->user();
-        $invoice = $this->invoiceForUser($request, $invoice, ['items']);
-
-        abort_if($invoice->isIssued(), 403, 'Issued invoices cannot be edited.');
+        $invoice->load('items');
 
         return Inertia::render('invoices/edit', [
             'invoice' => $invoice,
@@ -120,41 +128,49 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function update(UpdateInvoiceRequest $request, int $invoice, InvoiceService $invoiceService): RedirectResponse
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice, InvoiceService $invoiceService): RedirectResponse
     {
+        $this->authorize('update', $invoice);
+
         /** @var User $user */
         $user = $request->user();
-        $invoice = $invoiceService->update($user, $this->invoiceForUser($request, $invoice), $request->validated());
+        $invoice = $invoiceService->update($user, $invoice, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice updated.']);
 
         return redirect()->route('invoices.show', $invoice);
     }
 
-    public function destroy(Request $request, int $invoice, InvoiceService $invoiceService): RedirectResponse
+    public function destroy(Request $request, Invoice $invoice, InvoiceService $invoiceService): RedirectResponse
     {
+        $this->authorize('delete', $invoice);
+
         /** @var User $user */
         $user = $request->user();
-        $invoiceService->delete($user, $this->invoiceForUser($request, $invoice));
+        $invoiceService->delete($user, $invoice);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice deleted.']);
 
         return redirect()->route('invoices.index');
     }
 
-    public function issue(Request $request, int $invoice, InvoiceService $invoiceService): RedirectResponse
+    public function issue(Request $request, Invoice $invoice, InvoiceService $invoiceService): RedirectResponse
     {
+        $this->authorize('issue', $invoice);
+
         /** @var User $user */
         $user = $request->user();
-        $invoice = $invoiceService->issue($user, $this->invoiceForUser($request, $invoice));
+        $invoice = $invoiceService->issue($user, $invoice);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Invoice issued.']);
 
         return redirect()->route('invoices.show', $invoice);
     }
 
-    public function paymentStatus(Request $request, int $invoice): RedirectResponse
+    public function paymentStatus(Request $request, Invoice $invoice): RedirectResponse
     {
+        $this->authorize('updatePaymentStatus', $invoice);
+
         $data = $request->validate([
             'payment_status' => ['required', Rule::in([
                 Invoice::PAYMENT_PENDING,
@@ -162,14 +178,6 @@ class InvoiceController extends Controller
                 Invoice::PAYMENT_PAID,
             ])],
         ]);
-
-        $invoice = $this->invoiceForUser($request, $invoice);
-
-        if (! $invoice->isIssued()) {
-            throw ValidationException::withMessages([
-                'payment_status' => 'Only issued invoices can have their payment status updated.',
-            ]);
-        }
 
         $currentRank = $this->paymentStatusRank($invoice->payment_status);
         $nextRank = $this->paymentStatusRank($data['payment_status']);
@@ -196,17 +204,6 @@ class InvoiceController extends Controller
             Invoice::PAYMENT_PARTIAL => 1,
             Invoice::PAYMENT_PAID => 2,
         ][$paymentStatus];
-    }
-
-    /**
-     * @param  list<string>  $relations
-     */
-    private function invoiceForUser(Request $request, int $invoice, array $relations = []): Invoice
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        return $user->invoices()->with($relations)->findOrFail($invoice);
     }
 
     /**

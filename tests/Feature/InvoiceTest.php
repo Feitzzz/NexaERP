@@ -258,15 +258,15 @@ test('issuing invoice creates snapshots and makes invoice immutable', function (
 
     $this->actingAs($setup['user'])
         ->put(route('invoices.update', $invoice), invoicePayload($setup['customer'], $setup['product']))
-        ->assertSessionHasErrors('invoice');
+        ->assertForbidden();
 
     $this->actingAs($setup['user'])
         ->delete(route('invoices.destroy', $invoice))
-        ->assertSessionHasErrors('invoice');
+        ->assertForbidden();
 
     $this->actingAs($setup['user'])
         ->patch(route('invoices.issue', $invoice))
-        ->assertSessionHasErrors('invoice');
+        ->assertForbidden();
 
     expect($invoice->partySnapshots()->count())->toBe(2);
 });
@@ -327,7 +327,7 @@ test('issued invoice payment status can be updated', function () {
         ->patch(route('invoices.payment-status', $invoice), [
             'payment_status' => Invoice::PAYMENT_PAID,
         ])
-        ->assertSessionHasErrors('payment_status');
+        ->assertForbidden();
 
     $this->actingAs($setup['user'])
         ->post(route('invoices.issue', $invoice))

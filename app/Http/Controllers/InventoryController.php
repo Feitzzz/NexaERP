@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InventoryBalance;
+use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -10,6 +13,9 @@ class InventoryController extends Controller
 {
     public function index(Request $request): Response
     {
+        $this->authorize('viewAny', Product::class);
+        $this->authorize('viewAny', InventoryBalance::class);
+
         $search = $request->string('search')->toString();
         $warehouseId = $request->string('warehouse_id')->toString();
         $lowStock = $request->boolean('low_stock');
@@ -41,10 +47,12 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function product(Request $request, int $product): Response
+    public function product(Request $request, Product $product): Response
     {
-        $product = $request->user()->products()->whereKey($product)
-            ->with(['unit', 'inventoryBalances.warehouse'])->firstOrFail();
+        $this->authorize('view', $product);
+        $this->authorize('viewAny', InventoryBalance::class);
+        $this->authorize('viewAny', StockMovement::class);
+        $product->load(['unit', 'inventoryBalances.warehouse']);
 
         return Inertia::render('inventory/product-show', [
             'product' => $product,
@@ -56,6 +64,8 @@ class InventoryController extends Controller
 
     public function movements(Request $request): Response
     {
+        $this->authorize('viewAny', StockMovement::class);
+
         $productId = $request->string('product_id')->toString();
         $warehouseId = $request->string('warehouse_id')->toString();
         $movementType = $request->string('movement_type')->toString();
