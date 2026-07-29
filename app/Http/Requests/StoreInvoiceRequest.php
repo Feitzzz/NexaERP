@@ -39,6 +39,13 @@ class StoreInvoiceRequest extends FormRequest
                     ->where('user_id', $this->user()?->id)
                     ->where('is_active', true),
             ],
+            'warehouse_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('warehouses', 'id')
+                    ->where('user_id', $this->user()?->id)
+                    ->where('is_active', true),
+            ],
             'invoice_kind' => ['required', Rule::in([Invoice::KIND_B2B, Invoice::KIND_B2C, Invoice::KIND_B2G])],
             'issue_date' => ['required', 'date'],
             'due_date' => ['required', 'date', 'after_or_equal:issue_date'],

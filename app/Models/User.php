@@ -105,6 +105,30 @@ class User extends Authenticatable
         return $this->hasMany(Invoice::class);
     }
 
+    /** @return HasMany<Warehouse, $this> */
+    public function warehouses(): HasMany
+    {
+        return $this->hasMany(Warehouse::class);
+    }
+
+    /** @return HasMany<InventoryBalance, $this> */
+    public function inventoryBalances(): HasMany
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
+
+    /** @return HasMany<StockMovement, $this> */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /** @return HasMany<InventoryAdjustment, $this> */
+    public function inventoryAdjustments(): HasMany
+    {
+        return $this->hasMany(InventoryAdjustment::class);
+    }
+
     /**
      * @return HasOne<InvoiceSequence, $this>
      */

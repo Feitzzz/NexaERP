@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import InvoiceForm from '@/components/invoice/invoice-form';
 import Heading from '@/components/heading';
 
-export default function Edit({ invoice, customers, products }) {
+export default function Edit({ invoice, customers, products, warehouses }) {
     return (
         <>
             <Head title={`Edit ${invoice.invoice_number}`} />
@@ -17,6 +17,7 @@ export default function Edit({ invoice, customers, products }) {
                     invoice={invoice}
                     customers={customers}
                     products={products}
+                    warehouses={warehouses}
                 />
             </div>
         </>

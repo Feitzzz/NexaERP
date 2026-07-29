@@ -37,6 +37,8 @@ export default function ProductForm({
         item_type: product?.item_type ?? 'PRODUCT',
         selling_price: product?.selling_price ?? '',
         cost_price: product?.cost_price ?? '',
+        track_inventory: product?.track_inventory ?? false,
+        reorder_level: product?.reorder_level ?? '',
         description: product?.description ?? '',
         is_active: product?.is_active ?? true,
     });
@@ -104,7 +106,20 @@ export default function ProductForm({
                     <Label htmlFor="item_type">Item Type</Label>
                     <Select
                         value={data.item_type}
-                        onValueChange={(value) => setData('item_type', value)}
+                        onValueChange={(value) => {
+                            setData((current) => ({
+                                ...current,
+                                item_type: value,
+                                track_inventory:
+                                    value === 'SERVICE'
+                                        ? false
+                                        : current.track_inventory,
+                                reorder_level:
+                                    value === 'SERVICE'
+                                        ? ''
+                                        : current.reorder_level,
+                            }));
+                        }}
                     >
                         <SelectTrigger id="item_type" className="w-full">
                             <SelectValue />
@@ -194,6 +209,45 @@ export default function ProductForm({
                         }
                     />
                 </Field>
+
+                <div className="rounded-lg border p-4 md:col-span-2">
+                    <h2 className="font-medium">Inventory</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Stock quantities are managed through stock adjustments.
+                    </p>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="track_inventory"
+                                checked={data.track_inventory}
+                                disabled={data.item_type === 'SERVICE'}
+                                onCheckedChange={(checked) =>
+                                    setData('track_inventory', checked === true)
+                                }
+                            />
+                            <Label htmlFor="track_inventory">
+                                Track Inventory
+                            </Label>
+                            <InputError message={errors.track_inventory} />
+                        </div>
+                        <Field
+                            label="Reorder Level"
+                            error={errors.reorder_level}
+                        >
+                            <Input
+                                id="reorder_level"
+                                type="number"
+                                min="0"
+                                step="0.0001"
+                                disabled={!data.track_inventory}
+                                value={data.reorder_level}
+                                onChange={(event) =>
+                                    setData('reorder_level', event.target.value)
+                                }
+                            />
+                        </Field>
+                    </div>
+                </div>
 
                 <div className="grid gap-2 md:col-span-2">
                     <Label htmlFor="description">Description</Label>

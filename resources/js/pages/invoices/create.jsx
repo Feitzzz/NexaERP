@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import InvoiceForm from '@/components/invoice/invoice-form';
 import Heading from '@/components/heading';
 
-export default function Create({ customers, products, today }) {
+export default function Create({ customers, products, warehouses, today }) {
     return (
         <>
             <Head title="Create Invoice" />
@@ -16,6 +16,7 @@ export default function Create({ customers, products, today }) {
                 <InvoiceForm
                     customers={customers}
                     products={products}
+                    warehouses={warehouses}
                     today={today}
                 />
             </div>

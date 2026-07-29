@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[Fillable([
     'invoice_id',
@@ -74,5 +75,11 @@ class InvoiceItem extends Model
     public function taxCategory(): BelongsTo
     {
         return $this->belongsTo(TaxCategory::class);
+    }
+
+    /** @return MorphMany<StockMovement, $this> */
+    public function stockMovements(): MorphMany
+    {
+        return $this->morphMany(StockMovement::class, 'reference');
     }
 }

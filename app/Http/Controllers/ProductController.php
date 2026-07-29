@@ -28,6 +28,7 @@ class ProductController extends Controller
 
         $products = $user->products()
             ->with(['category', 'unit', 'taxCategory'])
+            ->withSum('inventoryBalances as quantity_on_hand', 'quantity_on_hand')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('name', 'like', "%{$search}%")

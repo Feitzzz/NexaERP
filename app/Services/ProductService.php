@@ -53,7 +53,10 @@ class ProductService
 
     public function delete(Product $product): bool
     {
-        if ($product->invoiceItems()->exists()) {
+        if ($product->invoiceItems()->exists()
+            || $product->inventoryBalances()->exists()
+            || $product->stockMovements()->exists()
+            || $product->inventoryAdjustmentLines()->exists()) {
             throw ValidationException::withMessages([
                 'product' => 'This product cannot be deleted because it is referenced by one or more invoices. Deactivate it instead.',
             ]);
@@ -84,6 +87,12 @@ class ProductService
             'item_type' => $data['item_type'],
             'selling_price' => $data['selling_price'],
             'cost_price' => $data['cost_price'] ?? null,
+            'track_inventory' => $data['item_type'] === Product::TYPE_PRODUCT
+                ? ($data['track_inventory'] ?? false)
+                : false,
+            'reorder_level' => $data['item_type'] === Product::TYPE_PRODUCT && ($data['track_inventory'] ?? false)
+                ? ($data['reorder_level'] ?? null)
+                : null,
             'is_active' => $data['is_active'] ?? true,
         ];
     }

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
+use App\Models\InventoryBalance;
 use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\Invoice\InvoiceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,6 +69,7 @@ class InvoiceController extends Controller
         return Inertia::render('invoices/create', [
             'customers' => $this->customerOptions($user),
             'products' => $this->productOptions($user),
+            'warehouses' => $this->warehouseOptions($user),
             'today' => now()->toDateString(),
         ]);
     }
@@ -89,7 +92,12 @@ class InvoiceController extends Controller
             'items',
             'supplierSnapshot',
             'customerSnapshot',
+            'warehouse',
+            'items.product',
         ]);
+        $invoice->setAttribute('has_inventory_impact', $invoice->items->contains(
+            fn ($item) => $item->item_type === Product::TYPE_PRODUCT && $item->product?->track_inventory
+        ));
 
         return Inertia::render('invoices/show', [
             'invoice' => $invoice,
@@ -108,6 +116,7 @@ class InvoiceController extends Controller
             'invoice' => $invoice,
             'customers' => $this->customerOptions($user),
             'products' => $this->productOptions($user),
+            'warehouses' => $this->warehouseOptions($user),
         ]);
     }
 
@@ -230,7 +239,7 @@ class InvoiceController extends Controller
     private function productOptions(User $user): array
     {
         $products = Product::query()
-            ->with(['unit', 'taxCategory'])
+            ->with(['unit', 'taxCategory', 'inventoryBalances'])
             ->where('user_id', $user->id)
             ->where('is_active', true)
             ->whereNotNull('tax_category_id')
@@ -251,9 +260,28 @@ class InvoiceController extends Controller
                 'tax_category_name' => $product->taxCategory?->name,
                 'tax_category_code' => $product->taxCategory?->code,
                 'tax_treatment' => $product->taxCategory?->treatment,
+                'track_inventory' => $product->track_inventory,
+                'warehouse_quantities' => $product->inventoryBalances
+                    ->mapWithKeys(fn (InventoryBalance $balance) => [
+                        (string) $balance->warehouse_id => (string) $balance->quantity_on_hand,
+                    ]),
             ];
         }
 
         return $options;
+    }
+
+    /** @return list<array{id: int, code: string, name: string, is_default: bool}> */
+    private function warehouseOptions(User $user): array
+    {
+        return array_values($user->warehouses()->where('is_active', true)
+            ->orderByDesc('is_default')->orderBy('name')
+            ->get(['id', 'code', 'name', 'is_default'])
+            ->map(fn (Warehouse $warehouse): array => [
+                'id' => (int) $warehouse->id,
+                'code' => (string) $warehouse->code,
+                'name' => (string) $warehouse->name,
+                'is_default' => (bool) $warehouse->is_default,
+            ])->all());
     }
 }

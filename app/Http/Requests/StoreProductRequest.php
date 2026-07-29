@@ -39,6 +39,16 @@ class StoreProductRequest extends FormRequest
             'item_type' => ['required', Rule::in([Product::TYPE_PRODUCT, Product::TYPE_SERVICE])],
             'selling_price' => ['required', 'numeric', 'min:0'],
             'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'track_inventory' => [
+                'sometimes',
+                'boolean',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($this->input('item_type') === Product::TYPE_SERVICE && filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
+                        $fail('Services cannot track inventory.');
+                    }
+                },
+            ],
+            'reorder_level' => ['nullable', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'is_active' => ['boolean'],
         ];

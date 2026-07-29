@@ -35,17 +35,20 @@ function invoiceSetup(array $overrides = []): array
         'tin' => 'CUSTOMER-TIN',
     ]);
     $category = Category::factory()->for($user)->create();
-    $unit = Unit::factory()->create(['code' => 'PCS', 'name' => 'Pieces']);
-    $taxCategory = TaxCategory::factory()->create([
+    $unit = Unit::query()->firstOrCreate(['code' => 'PCS'], ['name' => 'Pieces', 'is_active' => true]);
+    $taxCategory = TaxCategory::query()->firstOrCreate(['code' => TaxCategory::CODE_STANDARD], [
         'code' => TaxCategory::CODE_STANDARD,
         'name' => 'Standard VAT',
         'treatment' => TaxCategory::TREATMENT_TAXABLE,
+        'is_active' => true,
     ]);
-    TaxRate::factory()->for($taxCategory)->create([
-        'rate' => '7.5000',
-        'effective_from' => '2020-02-01',
-        'effective_to' => null,
-    ]);
+    if (! $taxCategory->taxRates()->exists()) {
+        TaxRate::factory()->for($taxCategory)->create([
+            'rate' => '7.5000',
+            'effective_from' => '2020-02-01',
+            'effective_to' => null,
+        ]);
+    }
     $product = Product::factory()
         ->for($user)
         ->for($category)

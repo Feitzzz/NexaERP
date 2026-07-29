@@ -21,8 +21,12 @@ export default function Dashboard() {
 
             <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div>
-                    <p className="text-sm font-medium text-muted-foreground">Business</p>
-                    <h1 className="mt-1 text-2xl font-semibold">{auth.user.name}</h1>
+                    <p className="text-sm font-medium text-muted-foreground">
+                        Business
+                    </p>
+                    <h1 className="mt-1 text-2xl font-semibold">
+                        {auth.user.name}
+                    </h1>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

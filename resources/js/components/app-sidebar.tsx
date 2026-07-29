@@ -9,6 +9,10 @@ import {
     Tags,
     ReceiptText,
     Users,
+    ChartNoAxesCombined,
+    Warehouse,
+    ClipboardPenLine,
+    PackageSearch,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -46,6 +50,26 @@ const mainNavItems: NavItem[] = [
         title: 'Invoices',
         href: '/invoices',
         icon: FileText,
+    },
+    {
+        title: 'Sales',
+        href: '/sales',
+        icon: ChartNoAxesCombined,
+    },
+    {
+        title: 'Inventory',
+        href: '/inventory',
+        icon: PackageSearch,
+    },
+    {
+        title: 'Warehouses',
+        href: '/warehouses',
+        icon: Warehouse,
+    },
+    {
+        title: 'Stock Adjustments',
+        href: '/inventory-adjustments',
+        icon: ClipboardPenLine,
     },
     {
         title: 'Categories',

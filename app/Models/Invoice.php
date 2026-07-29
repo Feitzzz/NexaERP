@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable([
     'user_id',
     'customer_id',
+    'warehouse_id',
     'sequence_number',
     'invoice_number',
     'invoice_kind',
@@ -30,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'payable_amount',
     'notes',
     'issued_at',
+    'stock_posted_at',
 ])]
 class Invoice extends Model
 {
@@ -61,6 +63,7 @@ class Invoice extends Model
             'due_date' => 'date',
             'tax_point_date' => 'date',
             'issued_at' => 'datetime',
+            'stock_posted_at' => 'datetime',
             'subtotal' => 'decimal:4',
             'discount_total' => 'decimal:4',
             'tax_exclusive_total' => 'decimal:4',
@@ -84,6 +87,12 @@ class Invoice extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    /** @return BelongsTo<Warehouse, $this> */
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**

@@ -93,6 +93,8 @@ export default function Show({ invoice }) {
                 </div>
 
                 <InputError message={errors.invoice} />
+                <InputError message={errors.warehouse_id} />
+                <InputError message={errors.stock} />
 
                 <div className="grid gap-4 md:grid-cols-3">
                     <Info label="Status">
@@ -168,6 +170,17 @@ export default function Show({ invoice }) {
                     <Info label="Tax Currency">
                         {invoice.tax_currency_code}
                     </Info>
+                </div>
+
+                <div className="rounded-lg border p-4 text-sm">
+                    <div className="font-medium">Inventory Status</div>
+                    <div className="mt-1 text-muted-foreground">
+                        {!invoice.has_inventory_impact
+                            ? 'No inventory impact.'
+                            : invoice.stock_posted_at
+                              ? `Stock posted on ${formatDate(invoice.stock_posted_at)} from ${invoice.warehouse?.name ?? 'warehouse'}.`
+                              : 'Stock will be posted when the invoice is issued.'}
+                    </div>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">

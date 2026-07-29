@@ -32,6 +32,8 @@ class ProductFactory extends Factory
             'item_type' => Product::TYPE_PRODUCT,
             'selling_price' => fake()->randomFloat(4, 1, 1000),
             'cost_price' => fake()->optional()->randomFloat(4, 1, 500),
+            'track_inventory' => false,
+            'reorder_level' => null,
             'is_active' => true,
         ];
     }
@@ -41,6 +43,17 @@ class ProductFactory extends Factory
         return $this->state(fn (): array => [
             'item_type' => Product::TYPE_SERVICE,
             'sku' => 'SRV-'.fake()->unique()->numerify('######'),
+            'track_inventory' => false,
+            'reorder_level' => null,
+        ]);
+    }
+
+    public function tracked(string $reorderLevel = '5.0000'): static
+    {
+        return $this->state(fn (): array => [
+            'item_type' => Product::TYPE_PRODUCT,
+            'track_inventory' => true,
+            'reorder_level' => $reorderLevel,
         ]);
     }
 }

@@ -6,7 +6,10 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoicePartySnapshot;
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Services\Inventory\InventoryService;
 use App\Services\Tax\TaxCalculatorService;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +20,7 @@ class InvoiceService
     public function __construct(
         private readonly InvoiceNumberGenerator $invoiceNumberGenerator,
         private readonly TaxCalculatorService $taxCalculatorService,
+        private readonly InventoryService $inventoryService,
     ) {}
 
     /**
@@ -32,6 +36,7 @@ class InvoiceService
             $invoice = Invoice::create([
                 'user_id' => $user->id,
                 'customer_id' => $customer->id,
+                'warehouse_id' => $data['warehouse_id'] ?? null,
                 'sequence_number' => $number['sequence_number'],
                 'invoice_number' => $number['invoice_number'],
                 'invoice_kind' => $data['invoice_kind'],
@@ -67,6 +72,7 @@ class InvoiceService
 
             $invoice->update([
                 'customer_id' => $customer->id,
+                'warehouse_id' => $data['warehouse_id'] ?? null,
                 'invoice_kind' => $data['invoice_kind'],
                 'issue_date' => $data['issue_date'],
                 'due_date' => $data['due_date'],
@@ -100,7 +106,7 @@ class InvoiceService
             $invoice = $this->lockedInvoiceForUser($user, $invoice);
             $this->ensureDraft($invoice, 'This invoice has already been issued.');
 
-            $invoice->load(['items', 'customer', 'user.address']);
+            $invoice->load(['items.product', 'customer', 'user.address', 'warehouse']);
 
             if ($invoice->items->isEmpty()) {
                 throw ValidationException::withMessages([
@@ -110,6 +116,7 @@ class InvoiceService
 
             $this->validateSupplierProfile($user->load('address'));
             $this->validateInvoiceKindRequirements($invoice->customer, $invoice->invoice_kind);
+            $this->postInvoiceStock($user, $invoice);
 
             $this->createSupplierSnapshot($invoice, $user);
             $this->createCustomerSnapshot($invoice, $invoice->customer);
@@ -121,6 +128,43 @@ class InvoiceService
 
             return $invoice->refresh()->load(['customer', 'items', 'supplierSnapshot', 'customerSnapshot']);
         });
+    }
+
+    private function postInvoiceStock(User $user, Invoice $invoice): void
+    {
+        if ($invoice->stock_posted_at !== null) {
+            throw ValidationException::withMessages(['invoice' => 'Inventory has already been posted for this invoice.']);
+        }
+
+        $trackedItems = $invoice->items->filter(
+            fn ($item) => $item->item_type === Product::TYPE_PRODUCT && $item->product?->track_inventory
+        );
+
+        if ($trackedItems->isEmpty()) {
+            return;
+        }
+
+        $warehouse = $invoice->warehouse;
+        if (! $warehouse instanceof Warehouse || $warehouse->user_id !== $user->id || ! $warehouse->is_active) {
+            throw ValidationException::withMessages([
+                'warehouse_id' => 'Select an active warehouse before issuing an invoice with tracked products.',
+            ]);
+        }
+
+        foreach ($trackedItems as $item) {
+            $this->inventoryService->decrease(
+                $user,
+                $warehouse,
+                $item->product,
+                (string) $item->quantity,
+                StockMovement::SALE_ISSUE,
+                $item,
+                null,
+                "Stock issued for invoice {$invoice->invoice_number}",
+            );
+        }
+
+        $invoice->update(['stock_posted_at' => now()]);
     }
 
     /**

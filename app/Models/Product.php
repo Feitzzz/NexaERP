@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'item_type',
     'selling_price',
     'cost_price',
+    'track_inventory',
+    'reorder_level',
     'is_active',
 ])]
 class Product extends Model
@@ -41,6 +43,8 @@ class Product extends Model
         return [
             'selling_price' => 'decimal:4',
             'cost_price' => 'decimal:4',
+            'track_inventory' => 'boolean',
+            'reorder_level' => 'decimal:4',
             'is_active' => 'boolean',
         ];
     }
@@ -83,5 +87,23 @@ class Product extends Model
     public function invoiceItems(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    /** @return HasMany<InventoryBalance, $this> */
+    public function inventoryBalances(): HasMany
+    {
+        return $this->hasMany(InventoryBalance::class);
+    }
+
+    /** @return HasMany<StockMovement, $this> */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /** @return HasMany<InventoryAdjustmentLine, $this> */
+    public function inventoryAdjustmentLines(): HasMany
+    {
+        return $this->hasMany(InventoryAdjustmentLine::class);
     }
 }

@@ -174,6 +174,7 @@ export default function Index({
                                     <Th>Tax Category</Th>
                                     <Th>Unit</Th>
                                     <Th>Selling Price</Th>
+                                    <Th>Stock</Th>
                                     <Th>Status</Th>
                                     <Th>Actions</Th>
                                 </tr>
@@ -208,6 +209,11 @@ export default function Index({
                                         <Td>{product.unit.code}</Td>
                                         <Td>
                                             {formatMoney(product.selling_price)}
+                                        </Td>
+                                        <Td>
+                                            {product.track_inventory
+                                                ? `${product.quantity_on_hand ?? 0}${product.reorder_level !== null && Number(product.quantity_on_hand ?? 0) <= Number(product.reorder_level) ? ' · Low' : ''}`
+                                                : 'Not tracked'}
                                         </Td>
                                         <Td>
                                             <Badge

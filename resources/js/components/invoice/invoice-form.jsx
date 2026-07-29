@@ -20,6 +20,7 @@ export default function InvoiceForm({
     invoice = null,
     customers,
     products,
+    warehouses,
     today = null,
 }) {
     const isEditing = Boolean(invoice);
@@ -34,6 +35,7 @@ export default function InvoiceForm({
 
     const { data, setData, post, put, processing, errors } = useForm({
         customer_id: invoice?.customer_id ? String(invoice.customer_id) : '',
+        warehouse_id: invoice?.warehouse_id ? String(invoice.warehouse_id) : '',
         invoice_kind: invoice?.invoice_kind ?? 'B2C',
         issue_date: dateValue(invoice?.issue_date) || today || '',
         due_date: dateValue(invoice?.due_date) || today || '',
@@ -106,6 +108,39 @@ export default function InvoiceForm({
     return (
         <form onSubmit={submit} className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-2">
+                    <Label htmlFor="warehouse_id">Warehouse</Label>
+                    <Select
+                        value={data.warehouse_id || 'none'}
+                        onValueChange={(value) =>
+                            setData(
+                                'warehouse_id',
+                                value === 'none' ? '' : value,
+                            )
+                        }
+                    >
+                        <SelectTrigger id="warehouse_id" className="w-full">
+                            <SelectValue placeholder="Select warehouse" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">No warehouse</SelectItem>
+                            {warehouses.map((warehouse) => (
+                                <SelectItem
+                                    key={warehouse.id}
+                                    value={String(warehouse.id)}
+                                >
+                                    {warehouse.code} - {warehouse.name}
+                                    {warehouse.is_default ? ' (Default)' : ''}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                        Required when the invoice includes inventory-tracked
+                        products.
+                    </p>
+                    <InputError message={errors.warehouse_id} />
+                </div>
                 <div className="grid gap-2">
                     <Label htmlFor="customer_id">Customer</Label>
                     <Select
@@ -261,7 +296,8 @@ export default function InvoiceForm({
                             </thead>
                             <tbody>
                                 {data.items.map((item, index) => {
-                                    const product = productById[item.product_id];
+                                    const product =
+                                        productById[item.product_id];
                                     const gross =
                                         amount(item.quantity) *
                                         amount(item.unit_price);
