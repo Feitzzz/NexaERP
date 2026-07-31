@@ -3,7 +3,7 @@
 ARG FRANKENPHP_VERSION=1.9
 ARG PHP_VERSION=8.4
 
-FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}-bookworm AS php-base
+FROM dunglas/frankenphp:${FRANKENPHP_VERSION}-php${PHP_VERSION}-bookworm AS base
 
 RUN install-php-extensions \
         bcmath \
@@ -13,11 +13,55 @@ RUN install-php-extensions \
         pdo_pgsql \
         zip
 
+COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+COPY docker/Caddyfile /etc/frankenphp/Caddyfile
+
 WORKDIR /app
 
-FROM php-base AS composer-dependencies
+FROM base AS composer_dependencies
 
-COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+COPY composer.json composer.lock ./
+RUN --mount=type=cache,target=/tmp/composer-cache \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache composer install \
+        --prefer-dist \
+        --no-interaction \
+        --no-progress \
+        --no-scripts && \
+    sha256sum composer.lock | cut -d ' ' -f 1 > vendor/.docker-composer-lock
+
+FROM base AS frontend_dependencies
+
+COPY --from=node:22-bookworm-slim /usr/local/ /usr/local/
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci && \
+    sha256sum package-lock.json | cut -d ' ' -f 1 > node_modules/.docker-package-lock
+
+FROM base AS development
+
+RUN cp "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+COPY --from=node:22-bookworm-slim /usr/local/ /usr/local/
+COPY --from=composer_dependencies /app/vendor /app/vendor
+COPY --from=frontend_dependencies /app/node_modules /app/node_modules
+COPY --chmod=755 docker/development-entrypoint.sh /usr/local/bin/development-entrypoint
+
+ENV APP_ENV=local \
+    APP_DEBUG=true \
+    LOG_CHANNEL=stderr \
+    SERVER_NAME=:8080
+
+EXPOSE 8080 5173
+ENTRYPOINT ["development-entrypoint"]
+CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile"]
+
+FROM frontend_dependencies AS frontend_build
+
+COPY --from=composer_dependencies /app/vendor /app/vendor
+COPY . .
+RUN npm run build
+
+FROM base AS production_dependencies
+
 COPY composer.json composer.lock ./
 RUN --mount=type=cache,target=/tmp/composer-cache \
     COMPOSER_CACHE_DIR=/tmp/composer-cache composer install \
@@ -27,46 +71,28 @@ RUN --mount=type=cache,target=/tmp/composer-cache \
         --no-progress \
         --optimize-autoloader \
         --no-scripts
-
 COPY . .
-RUN composer dump-autoload \
+RUN --mount=type=cache,target=/tmp/composer-cache \
+    COMPOSER_CACHE_DIR=/tmp/composer-cache composer install \
+        --no-dev \
+        --prefer-dist \
+        --no-interaction \
+        --no-progress \
+        --optimize-autoloader && \
+    composer dump-autoload \
         --no-dev \
         --classmap-authoritative \
         --no-interaction
 
-FROM php-base AS frontend-build
-
-COPY --from=node:22-bookworm-slim /usr/local/ /usr/local/
-COPY --from=composer-dependencies /app /app
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci
-COPY resources ./resources
-COPY vite.config.ts tsconfig.json components.json ./
-RUN npm run build
-
-FROM php-base AS test
-
-COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
-COPY . .
-RUN touch .env
-RUN --mount=type=cache,target=/tmp/composer-cache \
-    COMPOSER_CACHE_DIR=/tmp/composer-cache composer install \
-        --prefer-dist \
-        --no-interaction \
-        --no-progress
-COPY --from=frontend-build /app/public/build /app/public/build
-
-FROM php-base AS production
+FROM base AS production
 
 RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php-production.ini "$PHP_INI_DIR/conf.d/zz-production.ini"
-COPY docker/Caddyfile /etc/frankenphp/Caddyfile
-COPY --from=composer-dependencies --chown=root:root /app /app
-COPY --from=frontend-build --chown=root:root /app/public/build /app/public/build
+COPY --from=production_dependencies --chown=root:root /app /app
+COPY --from=frontend_build --chown=root:root /app/public/build /app/public/build
 
 RUN set -eux; \
-    rm -rf /app/tests; \
     mkdir -p \
         storage/app/private \
         storage/app/public \

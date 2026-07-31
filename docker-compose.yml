@@ -1,0 +1,99 @@
+name: nexaerp
+
+x-app: &app
+  image: nexaerp-app:development
+  build:
+    context: .
+    target: development
+  env_file:
+    - path: .env
+      required: false
+  environment: &app-environment
+    APP_ENV: local
+    APP_DEBUG: "true"
+    APP_URL: ${APP_URL:-http://localhost:8080}
+    APP_KEY: ${APP_KEY:-}
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: ${LOG_LEVEL:-debug}
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: 5432
+    DB_DATABASE: ${DB_DATABASE:-nexaerp}
+    DB_USERNAME: ${DB_USERNAME:-nexaerp}
+    DB_PASSWORD: ${DB_PASSWORD:-nexaerp}
+    CACHE_STORE: database
+    SESSION_DRIVER: database
+    QUEUE_CONNECTION: database
+  volumes: &app-volumes
+    - ./:/app
+    - vendor-data:/app/vendor
+    - node-modules-data:/app/node_modules
+    - app-storage:/app/storage/app
+    - dependency-locks:/var/lock/nexaerp
+  depends_on:
+    postgres:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  app:
+    <<: *app
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  vite:
+    <<: *app
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
+    environment:
+      <<: *app-environment
+      VITE_HMR_HOST: ${VITE_HMR_HOST:-localhost}
+      VITE_USE_POLLING: ${VITE_USE_POLLING:-false}
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    depends_on: {}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:5173/@vite/client"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  worker:
+    <<: *app
+    profiles: ["background"]
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    stop_grace_period: 100s
+
+  scheduler:
+    <<: *app
+    profiles: ["background"]
+    command: ["php", "artisan", "schedule:work"]
+    stop_grace_period: 30s
+
+  postgres:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-nexaerp}
+      POSTGRES_USER: ${DB_USERNAME:-nexaerp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nexaerp}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"${DB_USERNAME:-nexaerp}\" -d \"${DB_DATABASE:-nexaerp}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  app-storage:
+  dependency-locks:
+  node-modules-data:
+  postgres-data:
+  vendor-data:
