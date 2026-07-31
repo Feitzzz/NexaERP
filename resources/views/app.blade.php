@@ -36,8 +36,13 @@
 
         @fonts
 
+        @php
+            $pageEntry = collect(config('inertia.pages.extensions'))
+                ->map(fn ($extension) => "resources/js/pages/{$page['component']}.{$extension}")
+                ->first(fn ($path) => file_exists(base_path($path)));
+        @endphp
         @viteReactRefresh
-        @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+        @vite(array_filter(['resources/css/app.css', 'resources/js/app.tsx', $pageEntry]))
         <x-inertia::head>
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
