@@ -51,6 +51,13 @@ class InvoiceController extends Controller
 
         return Inertia::render('invoices/index', [
             'invoices' => $invoices,
+            'summary' => [
+                'total' => $user->invoices()->count(),
+                'drafts' => $user->invoices()->where('status', Invoice::STATUS_DRAFT)->count(),
+                'issued' => $user->invoices()->where('status', Invoice::STATUS_ISSUED)->count(),
+                'outstanding' => (float) $user->invoices()->where('status', Invoice::STATUS_ISSUED)
+                    ->where('payment_status', '!=', Invoice::PAYMENT_PAID)->sum('payable_amount'),
+            ],
             'customers' => $this->customerOptions($user),
             'filters' => [
                 'search' => $search,

@@ -1,8 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Pencil, Send, Trash2 } from 'lucide-react';
-import Heading from '@/components/heading';
+import { ArrowLeft, Pencil, Send, Trash2 } from 'lucide-react';
 import InputError from '@/components/input-error';
-import { Badge } from '@/components/ui/badge';
+import { PageHeader, StatusPill } from '@/components/page-primitives';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -59,14 +58,9 @@ export default function Show({ invoice }) {
         <>
             <Head title={invoice.invoice_number} />
 
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <Heading
-                        title={invoice.invoice_number}
-                        description={`${invoice.invoice_kind} sales invoice`}
-                    />
-
-                    <div className="flex flex-wrap gap-2">
+            <div className="nexa-page">
+                <Link href="/invoices" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Invoices</Link>
+                <PageHeader title={invoice.invoice_number} description={`${invoice.invoice_kind} sales invoice · ${invoice.customer.name}`}>
                         {isDraft && (
                             <>
                                 <Button variant="outline" asChild>
@@ -89,8 +83,7 @@ export default function Show({ invoice }) {
                                 </Button>
                             </>
                         )}
-                    </div>
-                </div>
+                </PageHeader>
 
                 <InputError message={errors.invoice} />
                 <InputError message={errors.warehouse_id} />
@@ -98,15 +91,7 @@ export default function Show({ invoice }) {
 
                 <div className="grid gap-4 md:grid-cols-3">
                     <Info label="Status">
-                        <Badge
-                            variant={
-                                invoice.status === 'ISSUED'
-                                    ? 'default'
-                                    : 'secondary'
-                            }
-                        >
-                            {invoice.status}
-                        </Badge>
+                        <StatusPill status={invoice.status} />
                     </Info>
                     <Info label="Payment Status">
                         {invoice.status === 'ISSUED' ? (
@@ -148,9 +133,7 @@ export default function Show({ invoice }) {
                                 <InputError message={errors.payment_status} />
                             </div>
                         ) : (
-                            <Badge variant="secondary">
-                                {invoice.payment_status}
-                            </Badge>
+                            <StatusPill status={invoice.payment_status} />
                         )}
                     </Info>
                     <Info label="Currency">{invoice.currency_code}</Info>
@@ -172,7 +155,7 @@ export default function Show({ invoice }) {
                     </Info>
                 </div>
 
-                <div className="rounded-lg border p-4 text-sm">
+                <div className="nexa-card p-4 text-sm">
                     <div className="font-medium">Inventory Status</div>
                     <div className="mt-1 text-muted-foreground">
                         {!invoice.has_inventory_impact
@@ -188,7 +171,7 @@ export default function Show({ invoice }) {
                     <Party title="Customer" party={customer} />
                 </div>
 
-                <div className="overflow-hidden rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
+                <div className="nexa-card">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="border-b bg-muted/40 text-xs text-muted-foreground uppercase">
@@ -267,14 +250,14 @@ export default function Show({ invoice }) {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-[1fr_24rem]">
-                    <div className="rounded-lg border p-4">
+                    <div className="nexa-card p-5">
                         <h2 className="mb-2 text-base font-semibold">Notes</h2>
                         <p className="text-sm whitespace-pre-wrap text-muted-foreground">
                             {invoice.notes || 'No notes.'}
                         </p>
                     </div>
 
-                    <div className="space-y-2 rounded-lg border p-4 text-sm">
+                    <div className="nexa-card space-y-2 p-5 text-sm">
                         <Total
                             label="Subtotal"
                             value={invoice.subtotal}
@@ -316,7 +299,7 @@ export default function Show({ invoice }) {
 
 function Party({ title, party }) {
     return (
-        <div className="rounded-lg border p-4">
+        <div className="nexa-card p-5">
             <h2 className="mb-3 text-base font-semibold">{title}</h2>
             {party ? (
                 <div className="grid gap-1 text-sm">
@@ -350,7 +333,7 @@ function Party({ title, party }) {
 
 function Info({ label, children }) {
     return (
-        <div className="rounded-lg border p-4">
+        <div className="nexa-card p-4">
             <div className="text-xs text-muted-foreground uppercase">
                 {label}
             </div>

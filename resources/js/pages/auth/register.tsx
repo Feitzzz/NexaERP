@@ -26,7 +26,7 @@ export default function Register({ passwordRules }: Props) {
                 {({ processing, errors }) => (
                     <>
                         <div className="grid gap-6">
-                            <div className="grid gap-4">
+                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
                                 <div>
                                     <h2 className="text-base font-semibold">
                                         Account
@@ -100,9 +100,9 @@ export default function Register({ passwordRules }: Props) {
                                         message={errors.password_confirmation}
                                     />
                                 </div>
-                            </div>
+                            </section>
 
-                            <div className="grid gap-4">
+                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
                                 <div>
                                     <h2 className="text-base font-semibold">
                                         Business profile
@@ -168,9 +168,9 @@ export default function Register({ passwordRules }: Props) {
                                         message={errors.business_description}
                                     />
                                 </div>
-                            </div>
+                            </section>
 
-                            <div className="grid gap-4">
+                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
                                 <div>
                                     <h2 className="text-base font-semibold">
                                         Address
@@ -287,7 +287,7 @@ export default function Register({ passwordRules }: Props) {
                                         <InputError message={errors.country} />
                                     </div>
                                 </div>
-                            </div>
+                            </section>
 
                             <Button
                                 type="submit"
@@ -314,6 +314,6 @@ export default function Register({ passwordRules }: Props) {
 }
 
 Register.layout = {
-    title: 'Create your business account',
-    description: 'Start with the basics, then complete your profile when ready',
+    title: 'Create your NexaERP workspace',
+    description: 'Set up your secure business account. You can refine the optional profile details at any time.',
 };

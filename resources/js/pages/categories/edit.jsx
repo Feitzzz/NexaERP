@@ -7,7 +7,7 @@ export default function Edit({ category }) {
         <>
             <Head title="Edit Category" />
 
-            <div className="mx-auto max-w-3xl space-y-6 p-4">
+            <div className="nexa-page max-w-3xl">
                 <Heading
                     title="Edit Category"
                     description="Update catalog category details."

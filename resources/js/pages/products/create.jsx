@@ -7,13 +7,13 @@ export default function Create({ categories, units, taxCategories }) {
         <>
             <Head title="Create Product" />
 
-            <div className="mx-auto max-w-5xl space-y-6 p-4">
+            <div className="nexa-page max-w-5xl">
                 <Heading
                     title="Create Product"
                     description="Add a product or service to the catalog."
                 />
 
-                <div className="rounded-lg border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                <div className="nexa-card p-6 md:p-8">
                     <ProductForm
                         categories={categories}
                         units={units}

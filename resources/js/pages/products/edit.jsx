@@ -7,13 +7,13 @@ export default function Edit({ product, categories, units, taxCategories }) {
         <>
             <Head title="Edit Product" />
 
-            <div className="mx-auto max-w-5xl space-y-6 p-4">
+            <div className="nexa-page max-w-5xl">
                 <Heading
                     title="Edit Product"
                     description="Update product or service details."
                 />
 
-                <div className="rounded-lg border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                <div className="nexa-card p-6 md:p-8">
                     <ProductForm
                         product={product}
                         categories={categories}

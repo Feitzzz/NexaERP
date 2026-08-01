@@ -23,12 +23,12 @@ export default function WarehouseForm({ warehouse = null }) {
     }
 
     return (
-        <form onSubmit={submit} className="max-w-3xl space-y-6">
+        <form onSubmit={submit} className="space-y-6">
             <Heading
                 title={warehouse ? 'Edit Warehouse' : 'New Warehouse'}
                 description="Define a stock location for this business."
             />
-            <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-2">
+            <div className="nexa-card grid gap-5 p-5 md:grid-cols-2 md:p-7">
                 <Field label="Code" error={errors.code}>
                     <Input
                         value={data.code}

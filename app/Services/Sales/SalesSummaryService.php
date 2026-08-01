@@ -3,6 +3,7 @@
 namespace App\Services\Sales;
 
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -33,6 +34,7 @@ class SalesSummaryService
             'total_sales' => $total,
             'issued_invoices' => $count,
             'average_invoice_value' => $count === 0 ? '0' : bcdiv($total, (string) $count, 4),
+            'units_sold' => (string) InvoiceItem::query()->whereIn('invoice_id', (clone $invoiceIds))->sum('quantity'),
             'by_customer' => $byCustomer,
             'by_product' => $byProduct,
             'recent_invoices' => (clone $invoices)->with('customer')->latest('issued_at')->limit(10)->get(),

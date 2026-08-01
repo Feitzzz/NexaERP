@@ -4,7 +4,7 @@ export default function Create() {
     return (
         <>
             <Head title="New Warehouse" />
-            <div className="mx-auto max-w-7xl p-4">
+            <div className="nexa-page max-w-5xl">
                 <WarehouseForm />
             </div>
         </>

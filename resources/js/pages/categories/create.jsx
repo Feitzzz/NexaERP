@@ -7,7 +7,7 @@ export default function Create() {
         <>
             <Head title="Create Category" />
 
-            <div className="mx-auto max-w-3xl space-y-6 p-4">
+            <div className="nexa-page max-w-3xl">
                 <Heading
                     title="Create Category"
                     description="Add a catalog category."

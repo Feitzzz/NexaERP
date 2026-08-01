@@ -7,7 +7,7 @@ export default function Create({ customers, products, warehouses, today }) {
         <>
             <Head title="Create Invoice" />
 
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
+            <div className="nexa-page">
                 <Heading
                     title="Create Invoice"
                     description="Prepare a standard sales invoice."

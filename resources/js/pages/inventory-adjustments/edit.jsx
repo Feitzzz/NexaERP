@@ -5,7 +5,7 @@ export default function Edit(props) {
     return (
         <>
             <Head title={`Edit ${props.adjustment.adjustment_number}`} />
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
+            <div className="nexa-page">
                 <Heading
                     title={`Edit ${props.adjustment.adjustment_number}`}
                     description="Update this draft adjustment."

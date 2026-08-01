@@ -7,7 +7,7 @@ export default function Edit({ invoice, customers, products, warehouses }) {
         <>
             <Head title={`Edit ${invoice.invoice_number}`} />
 
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
+            <div className="nexa-page">
                 <Heading
                     title={`Edit ${invoice.invoice_number}`}
                     description="Update draft invoice details and items."

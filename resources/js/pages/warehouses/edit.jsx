@@ -4,7 +4,7 @@ export default function Edit({ warehouse }) {
     return (
         <>
             <Head title={`Edit ${warehouse.name}`} />
-            <div className="mx-auto max-w-7xl p-4">
+            <div className="nexa-page max-w-5xl">
                 <WarehouseForm warehouse={warehouse} />
             </div>
         </>

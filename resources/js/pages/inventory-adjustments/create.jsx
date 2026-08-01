@@ -5,7 +5,7 @@ export default function Create(props) {
     return (
         <>
             <Head title="New Stock Adjustment" />
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
+            <div className="nexa-page">
                 <Heading
                     title="New Stock Adjustment"
                     description="Prepare a draft stock change."

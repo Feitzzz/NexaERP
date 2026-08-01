@@ -20,6 +20,11 @@ class InventoryController extends Controller
         $warehouseId = $request->string('warehouse_id')->toString();
         $lowStock = $request->boolean('low_stock');
 
+        $inventoryProducts = $request->user()->products()
+            ->where('track_inventory', true)
+            ->withSum('inventoryBalances as total_quantity_on_hand', 'quantity_on_hand')
+            ->get();
+
         $balances = $request->user()->products()
             ->with([
                 'unit',
@@ -44,6 +49,13 @@ class InventoryController extends Controller
             'balances' => $balances,
             'warehouses' => $request->user()->warehouses()->orderBy('name')->get(['id', 'code', 'name']),
             'filters' => compact('search', 'warehouseId', 'lowStock'),
+            'summary' => [
+                'tracked_products' => $inventoryProducts->count(),
+                'quantity_on_hand' => (float) $inventoryProducts->sum(fn ($product) => (float) ($product->total_quantity_on_hand ?? 0)),
+                'stock_value' => (float) $inventoryProducts->sum(fn ($product) => (float) ($product->total_quantity_on_hand ?? 0) * (float) ($product->cost_price ?? 0)),
+                'low_stock' => $inventoryProducts->filter(fn ($product) => $product->reorder_level !== null
+                    && (float) ($product->total_quantity_on_hand ?? 0) <= (float) $product->reorder_level)->count(),
+            ],
         ]);
     }
 

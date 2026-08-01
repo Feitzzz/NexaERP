@@ -106,8 +106,12 @@ export default function InvoiceForm({
     }
 
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="nexa-card space-y-7 p-5 md:p-7">
             <div className="grid gap-6 md:grid-cols-2">
+                <div className="md:col-span-2">
+                    <h2 className="font-semibold">Invoice information</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Customer, document dates, warehouse and currency.</p>
+                </div>
                 <div className="grid gap-2">
                     <Label htmlFor="warehouse_id">Warehouse</Label>
                     <Select
@@ -269,7 +273,7 @@ export default function InvoiceForm({
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 border-t pt-6">
                 <div className="flex items-center justify-between gap-3">
                     <h2 className="text-base font-semibold">Invoice Items</h2>
                     <Button type="button" variant="outline" onClick={addItem}>

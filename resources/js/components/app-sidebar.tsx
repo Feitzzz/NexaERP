@@ -1,10 +1,8 @@
 import { Link } from '@inertiajs/react';
 import {
-    BookOpen,
     Boxes,
     Building2,
     FileText,
-    FolderGit2,
     LayoutGrid,
     Tags,
     ReceiptText,
@@ -13,9 +11,9 @@ import {
     Warehouse,
     ClipboardPenLine,
     PackageSearch,
+    Settings,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -30,21 +28,11 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const workspaceItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
-    },
-    {
-        title: 'Business',
-        href: '/business',
-        icon: Building2,
-    },
-    {
-        title: 'Customers',
-        href: '/customers',
-        icon: Users,
     },
     {
         title: 'Invoices',
@@ -52,29 +40,9 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
-        title: 'Sales',
-        href: '/sales',
-        icon: ChartNoAxesCombined,
-    },
-    {
-        title: 'Inventory',
-        href: '/inventory',
-        icon: PackageSearch,
-    },
-    {
-        title: 'Warehouses',
-        href: '/warehouses',
-        icon: Warehouse,
-    },
-    {
-        title: 'Stock Adjustments',
-        href: '/inventory-adjustments',
-        icon: ClipboardPenLine,
-    },
-    {
-        title: 'Categories',
-        href: '/categories',
-        icon: Tags,
+        title: 'Customers',
+        href: '/customers',
+        icon: Users,
     },
     {
         title: 'Products',
@@ -82,28 +50,37 @@ const mainNavItems: NavItem[] = [
         icon: Boxes,
     },
     {
+        title: 'Inventory',
+        href: '/inventory',
+        icon: PackageSearch,
+    },
+    {
+        title: 'Sales',
+        href: '/sales',
+        icon: ChartNoAxesCombined,
+    },
+];
+
+const configurationItems: NavItem[] = [
+    {
         title: 'Taxes',
         href: '/taxes',
         icon: ReceiptText,
     },
-];
-
-const footerNavItems: NavItem[] = [
+    { title: 'Categories', href: '/categories', icon: Tags },
+    { title: 'Warehouses', href: '/warehouses', icon: Warehouse },
+    { title: 'Stock Adjustments', href: '/inventory-adjustments', icon: ClipboardPenLine },
+    { title: 'Business', href: '/business', icon: Building2 },
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: FolderGit2,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'Settings',
+        href: '/settings/profile',
+        icon: Settings,
     },
 ];
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border/80">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -117,11 +94,14 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={workspaceItems} />
+                <NavMain items={configurationItems} label="Configuration" />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                <div className="mx-2 mb-2 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 group-data-[collapsible=icon]:hidden dark:bg-emerald-950/40 dark:text-emerald-400">
+                    <span className="size-1.5 rounded-full bg-amber-500" /> NRS compliance in progress
+                </div>
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

@@ -54,8 +54,18 @@ class ProductController extends Controller
             ->paginate(25)
             ->withQueryString();
 
+        $trackedProducts = $user->products()->where('track_inventory', true)
+            ->withSum('inventoryBalances as quantity_on_hand', 'quantity_on_hand')->get();
+
         return Inertia::render('products/index', [
             'products' => $products,
+            'summary' => [
+                'total' => $user->products()->count(),
+                'active' => $user->products()->where('is_active', true)->count(),
+                'services' => $user->products()->where('item_type', Product::TYPE_SERVICE)->count(),
+                'low_stock' => $trackedProducts->filter(fn ($product) => $product->reorder_level !== null
+                    && (float) ($product->quantity_on_hand ?? 0) <= (float) $product->reorder_level)->count(),
+            ],
             'categories' => $this->categoryOptions($user),
             'taxCategories' => $this->taxCategoryOptions(),
             'filters' => [

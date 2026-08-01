@@ -1,135 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
-import Heading from '@/components/heading';
-import { Badge } from '@/components/ui/badge';
+import { Eye, FileClock, Pencil, Plus, Send, SlidersHorizontal, Trash2, Warehouse } from 'lucide-react';
+import { DataPanel, EmptyTable, PageHeader, Pagination, StatusPill } from '@/components/page-primitives';
 import { Button } from '@/components/ui/button';
+
 export default function Index({ adjustments }) {
-    return (
-        <>
-            <Head title="Stock Adjustments" />
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
-                <div className="flex justify-between">
-                    <Heading
-                        title="Stock Adjustments"
-                        description="Draft and post auditable stock changes."
-                    />
-                    <Button asChild>
-                        <Link href="/inventory-adjustments/create">
-                            New Adjustment
-                        </Link>
-                    </Button>
-                </div>
-                <div className="overflow-x-auto rounded-lg border">
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b bg-muted/40">
-                            <tr>
-                                <Th>Number</Th>
-                                <Th>Warehouse</Th>
-                                <Th>Reason</Th>
-                                <Th>Status</Th>
-                                <Th>Created</Th>
-                                <Th>Posted</Th>
-                                <Th>Actions</Th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {adjustments.data.map((item) => (
-                                <tr
-                                    key={item.id}
-                                    className="border-b last:border-0"
-                                >
-                                    <Td>{item.adjustment_number}</Td>
-                                    <Td>{item.warehouse.name}</Td>
-                                    <Td>{item.reason.replaceAll('_', ' ')}</Td>
-                                    <Td>
-                                        <Badge
-                                            variant={
-                                                item.status === 'POSTED'
-                                                    ? 'default'
-                                                    : 'secondary'
-                                            }
-                                        >
-                                            {item.status}
-                                        </Badge>
-                                    </Td>
-                                    <Td>{date(item.created_at)}</Td>
-                                    <Td>
-                                        {item.posted_at
-                                            ? date(item.posted_at)
-                                            : '—'}
-                                    </Td>
-                                    <Td>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={`/inventory-adjustments/${item.id}`}
-                                                >
-                                                    View
-                                                </Link>
-                                            </Button>
-                                            {item.status === 'DRAFT' && (
-                                                <>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        asChild
-                                                    >
-                                                        <Link
-                                                            href={`/inventory-adjustments/${item.id}/edit`}
-                                                        >
-                                                            Edit
-                                                        </Link>
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            confirm(
-                                                                'Once posted, this adjustment cannot be edited. Continue?',
-                                                            ) &&
-                                                            router.post(
-                                                                `/inventory-adjustments/${item.id}/post`,
-                                                            )
-                                                        }
-                                                    >
-                                                        Post
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            confirm(
-                                                                'Delete this draft?',
-                                                            ) &&
-                                                            router.delete(
-                                                                `/inventory-adjustments/${item.id}`,
-                                                            )
-                                                        }
-                                                    >
-                                                        Delete
-                                                    </Button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </Td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </>
-    );
+    const post = (item) => confirm('Once posted, this adjustment cannot be edited. Continue?') && router.post(`/inventory-adjustments/${item.id}/post`);
+    const destroy = (item) => confirm('Delete this draft adjustment?') && router.delete(`/inventory-adjustments/${item.id}`);
+    return <><Head title="Stock Adjustments" /><div className="nexa-page"><PageHeader title="Stock adjustments" description="Prepare and post auditable changes to warehouse quantities."><Button asChild><Link href="/inventory-adjustments/create"><Plus />New adjustment</Link></Button></PageHeader><DataPanel title="Adjustment register" description="Draft and posted inventory changes" count={adjustments.total}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><Th>Adjustment</Th><Th>Warehouse</Th><Th>Reason</Th><Th>Status</Th><Th>Timeline</Th><Th className="text-right">Actions</Th></tr></thead><tbody>{!adjustments.data.length && <EmptyTable colSpan={6} icon={SlidersHorizontal} title="No stock adjustments yet" description="Create an opening balance or manual adjustment to change inventory." href="/inventory-adjustments/create" action="New adjustment" />}{adjustments.data.map((item) => <tr key={item.id} className="border-t"><Td><Link href={`/inventory-adjustments/${item.id}`}><span className="block font-medium text-foreground hover:text-primary">{item.adjustment_number}</span><span className="mt-0.5 block text-xs text-muted-foreground">Created {date(item.created_at)}</span></Link></Td><Td><span className="inline-flex items-center gap-2"><Warehouse className="size-3.5 text-muted-foreground" />{item.warehouse.name}</span></Td><Td className="text-muted-foreground">{words(item.reason)}</Td><Td><StatusPill status={item.status} /></Td><Td>{item.posted_at ? <span className="text-xs">Posted {date(item.posted_at)}</span> : <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><FileClock className="size-3.5" />Not posted</span>}</Td><Td><div className="flex justify-end gap-1"><Button size="icon" variant="ghost" asChild><Link href={`/inventory-adjustments/${item.id}`}><Eye /></Link></Button>{item.status === 'DRAFT' && <><Button size="icon" variant="ghost" asChild><Link href={`/inventory-adjustments/${item.id}/edit`}><Pencil /></Link></Button><Button size="icon" variant="ghost" onClick={() => post(item)}><Send /></Button><Button size="icon" variant="ghost" className="hover:text-destructive" onClick={() => destroy(item)}><Trash2 /></Button></>}</div></Td></tr>)}</tbody></table></div></DataPanel><Pagination links={adjustments.links} from={adjustments.from} to={adjustments.to} total={adjustments.total} /></div></>;
 }
-const date = (value) =>
-    new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium' }).format(
-        new Date(value),
-    );
-function Th({ children }) {
-    return <th className="px-4 py-3 font-medium">{children}</th>;
-}
-function Td({ children }) {
-    return <td className="px-4 py-3">{children}</td>;
-}
+const date = (value) => new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium' }).format(new Date(value));
+const words = (value) => value.toLowerCase().split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+function Th({ children, className = '' }) { return <th className={`px-5 py-3 font-medium whitespace-nowrap ${className}`}>{children}</th>; }
+function Td({ children }) { return <td className="px-5 py-3.5 align-middle">{children}</td>; }

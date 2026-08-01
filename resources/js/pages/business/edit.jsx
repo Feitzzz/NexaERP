@@ -7,13 +7,13 @@ export default function Edit({ business }) {
         <>
             <Head title="Edit Business" />
 
-            <div className="mx-auto max-w-5xl space-y-6 p-4">
+            <div className="nexa-page max-w-5xl">
                 <Heading
                     title="Edit Business"
                     description="Update your company profile and address."
                 />
 
-                <div className="rounded-lg border border-sidebar-border/70 p-6 dark:border-sidebar-border">
+                <div className="nexa-card p-6 md:p-8">
                     <BusinessForm business={business} />
                 </div>
             </div>

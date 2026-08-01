@@ -33,7 +33,7 @@ export default function CategoryForm({ category = null }) {
     }
 
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="nexa-card space-y-6 p-5 md:p-7">
             <div className="grid gap-6">
                 <Field label="Name" error={errors.name}>
                     <Input

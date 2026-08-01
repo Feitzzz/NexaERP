@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCustomerRequest;
 use App\Http\Requests\UpdateCustomerRequest;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\User;
 use App\Services\CustomerService;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,13 @@ class CustomerController extends Controller
 
         return Inertia::render('customers/index', [
             'customers' => $customers,
+            'summary' => [
+                'total' => $user->customers()->count(),
+                'active' => $user->customers()->where('is_active', true)->count(),
+                'businesses' => $user->customers()->where('customer_type', 'business')->count(),
+                'outstanding' => (float) $user->invoices()->where('status', Invoice::STATUS_ISSUED)
+                    ->where('payment_status', '!=', Invoice::PAYMENT_PAID)->sum('payable_amount'),
+            ],
             'filters' => [
                 'search' => $search,
             ],
@@ -66,8 +74,19 @@ class CustomerController extends Controller
     {
         $this->authorize('view', $customer);
 
+        $recentInvoices = $customer->invoices()->latest()->limit(8)->get([
+            'id', 'customer_id', 'invoice_number', 'issue_date', 'status', 'payment_status', 'payable_amount', 'currency_code',
+        ]);
+
         return Inertia::render('customers/show', [
             'customer' => $customer,
+            'summary' => [
+                'invoice_count' => $customer->invoices()->count(),
+                'total_invoiced' => (float) $customer->invoices()->where('status', Invoice::STATUS_ISSUED)->sum('payable_amount'),
+                'outstanding' => (float) $customer->invoices()->where('status', Invoice::STATUS_ISSUED)
+                    ->where('payment_status', '!=', Invoice::PAYMENT_PAID)->sum('payable_amount'),
+            ],
+            'recentInvoices' => $recentInvoices,
         ]);
     }
 

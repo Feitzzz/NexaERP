@@ -49,7 +49,7 @@ export default function AdjustmentForm({
             : post('/inventory-adjustments');
     }
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <form onSubmit={submit} className="nexa-card space-y-6 p-5 md:p-7">
             <div className="grid gap-5 rounded-lg border p-5 md:grid-cols-2">
                 <div className="grid gap-2">
                     <Label>Warehouse</Label>

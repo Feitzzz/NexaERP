@@ -1,116 +1,14 @@
 import { Head } from '@inertiajs/react';
-import Heading from '@/components/heading';
-import { Badge } from '@/components/ui/badge';
+import { Info, ReceiptText } from 'lucide-react';
+import { DataPanel, EmptyTable, PageHeader, StatusPill } from '@/components/page-primitives';
 
 export default function Index({ taxCategories }) {
-    return (
-        <>
-            <Head title="Taxes" />
-
-            <div className="mx-auto max-w-7xl space-y-6 p-4">
-                <Heading
-                    title="Taxes"
-                    description="Review tax classifications and current rates."
-                />
-
-                <div className="overflow-hidden rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="border-b bg-muted/40 text-xs text-muted-foreground uppercase">
-                                <tr>
-                                    <Th>Code</Th>
-                                    <Th>Tax Category</Th>
-                                    <Th>Treatment</Th>
-                                    <Th>Current Rate</Th>
-                                    <Th>Effective From</Th>
-                                    <Th>Status</Th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {taxCategories.map((taxCategory) => (
-                                    <tr
-                                        key={taxCategory.id}
-                                        className="border-b last:border-b-0"
-                                    >
-                                        <Td className="font-medium">
-                                            {taxCategory.code}
-                                        </Td>
-                                        <Td>{taxCategory.name}</Td>
-                                        <Td>
-                                            {formatTreatment(
-                                                taxCategory.treatment,
-                                            )}
-                                        </Td>
-                                        <Td>
-                                            {formatRate(
-                                                taxCategory.current_rate,
-                                            )}
-                                        </Td>
-                                        <Td>
-                                            {taxCategory.effective_from ?? '-'}
-                                        </Td>
-                                        <Td>
-                                            <Badge
-                                                variant={
-                                                    taxCategory.is_active
-                                                        ? 'default'
-                                                        : 'secondary'
-                                                }
-                                            >
-                                                {taxCategory.is_active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
-                                            </Badge>
-                                        </Td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </>
-    );
+    const active = taxCategories.filter((item) => item.is_active).length;
+    return <><Head title="Taxes" /><div className="nexa-page"><PageHeader title="Taxes" description="Review tax classifications, treatments and currently effective rates." /><div className="flex gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sky-800 dark:border-sky-900 dark:bg-sky-950/35 dark:text-sky-300"><Info className="mt-0.5 size-4 shrink-0" /><div><p className="text-sm font-medium">Tax configuration</p><p className="mt-1 text-xs leading-5 opacity-80">These categories are used during authoritative invoice calculations. External compliance capabilities are still being developed.</p></div></div><DataPanel title="Tax categories" description={`${active} active of ${taxCategories.length} configured`} count={taxCategories.length}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><Th>Classification</Th><Th>Treatment</Th><Th>Current rate</Th><Th>Effective from</Th><Th>Status</Th></tr></thead><tbody>{!taxCategories.length && <EmptyTable colSpan={5} icon={ReceiptText} title="No tax categories configured" description="Tax categories will appear here when they are available." />}{taxCategories.map((item) => <tr key={item.id} className="border-t"><Td><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-primary/10"><ReceiptText className="size-4 text-primary" /></span><span><span className="block font-medium text-foreground">{item.name}</span><span className="mt-0.5 block font-mono text-xs text-muted-foreground">{item.code}</span></span></div></Td><Td className="text-muted-foreground">{words(item.treatment)}</Td><Td><span className="text-base font-semibold">{rate(item.current_rate)}</span></Td><Td className="text-muted-foreground">{item.effective_from ? date(item.effective_from) : '—'}</Td><Td><StatusPill status={item.is_active ? 'Active' : 'Inactive'} /></Td></tr>)}</tbody></table></div></DataPanel></div></>;
 }
-
-function Th({ children }) {
-    return (
-        <th className="px-4 py-3 font-medium whitespace-nowrap">{children}</th>
-    );
-}
-
-function Td({ children, className = '' }) {
-    return (
-        <td className={`px-4 py-3 whitespace-nowrap ${className}`}>
-            {children}
-        </td>
-    );
-}
-
-function formatTreatment(treatment) {
-    return treatment
-        .toLowerCase()
-        .split('_')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-
-function formatRate(rate) {
-    if (rate === null || rate === undefined) {
-        return '-';
-    }
-
-    return `${Number(rate).toLocaleString(undefined, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 4,
-    })}%`;
-}
-
-Index.layout = {
-    breadcrumbs: [
-        {
-            title: 'Taxes',
-            href: '/taxes',
-        },
-    ],
-};
+function Th({ children }) { return <th className="px-5 py-3 font-medium whitespace-nowrap">{children}</th>; }
+function Td({ children }) { return <td className="px-5 py-3.5 align-middle">{children}</td>; }
+const words = (value) => value.toLowerCase().split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+const rate = (value) => value === null || value === undefined ? '—' : `${Number(value).toLocaleString(undefined, { maximumFractionDigits: 4 })}%`;
+const date = (value) => new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium' }).format(new Date(value));
+Index.layout = { breadcrumbs: [{ title: 'Taxes', href: '/taxes' }] };
