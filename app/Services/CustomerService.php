@@ -80,7 +80,7 @@ class CustomerService
             'email' => $data['email'] ?? null,
             'phone' => $data['phone'],
             'tin' => $data['tin'] ?? null,
-            'business_description' => $data['business_description'] ?? null,
+            'business_description' => null,
             'street' => $data['street'],
             'city' => $data['city'],
             'lga' => $data['lga'] ?? null,

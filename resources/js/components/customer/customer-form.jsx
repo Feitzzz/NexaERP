@@ -12,9 +12,6 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-const fieldClass =
-    'min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50';
-
 const customerTypes = [
     { value: 'individual', label: 'Individual' },
     { value: 'business', label: 'Business' },
@@ -29,7 +26,6 @@ export default function CustomerForm({ customer = null }) {
         tin: customer?.tin ?? '',
         email: customer?.email ?? '',
         phone: customer?.phone ?? '',
-        business_description: customer?.business_description ?? '',
         street: customer?.street ?? '',
         city: customer?.city ?? '',
         lga: customer?.lga ?? '',
@@ -74,7 +70,10 @@ export default function CustomerForm({ customer = null }) {
                     <Select
                         value={data.customer_type}
                         onValueChange={(value) =>
-                            setData('customer_type', value)
+                            setData({
+                                ...data,
+                                customer_type: value,
+                            })
                         }
                     >
                         <SelectTrigger id="customer_type" className="w-full">
@@ -91,11 +90,19 @@ export default function CustomerForm({ customer = null }) {
                     <InputError message={errors.customer_type} />
                 </div>
 
-                <Field label="TIN" error={errors.tin}>
+                <Field
+                    label={
+                        data.customer_type === 'business'
+                            ? 'Tax Identification Number (TIN)'
+                            : 'Tax Identification Number (TIN) · optional'
+                    }
+                    error={errors.tin}
+                >
                     <Input
                         id="tin"
                         value={data.tin}
                         onChange={(event) => setData('tin', event.target.value)}
+                        required={data.customer_type === 'business'}
                     />
                 </Field>
 
@@ -121,21 +128,6 @@ export default function CustomerForm({ customer = null }) {
                     />
                 </Field>
 
-                <div className="grid gap-2 md:col-span-2">
-                    <Label htmlFor="business_description">
-                        Business Description
-                    </Label>
-                    <textarea
-                        id="business_description"
-                        className={fieldClass}
-                        value={data.business_description}
-                        onChange={(event) =>
-                            setData('business_description', event.target.value)
-                        }
-                    />
-                    <InputError message={errors.business_description} />
-                </div>
-
                 <Field label="Street" error={errors.street}>
                     <Input
                         id="street"
@@ -158,7 +150,7 @@ export default function CustomerForm({ customer = null }) {
                     />
                 </Field>
 
-                <Field label="LGA" error={errors.lga}>
+                <Field label="Local Government Area (LGA)" error={errors.lga}>
                     <Input
                         id="lga"
                         value={data.lga}

@@ -309,7 +309,9 @@ class InvoiceService
 
     private function validateInvoiceKindRequirements(Customer $customer, string $invoiceKind): void
     {
-        if ($invoiceKind === Invoice::KIND_B2B && blank($customer->tin)) {
+        if ($customer->customer_type === 'business'
+            && $invoiceKind === Invoice::KIND_B2B
+            && blank($customer->tin)) {
             throw ValidationException::withMessages([
                 'customer_id' => 'B2B invoices require a customer TIN.',
             ]);
@@ -368,7 +370,7 @@ class InvoiceService
             'incorporation_number' => null,
             'email' => $customer->email,
             'phone' => $customer->phone,
-            'business_description' => $customer->business_description,
+            'business_description' => null,
             'street' => $customer->street,
             'city' => $customer->city,
             'state' => $customer->state,

@@ -44,7 +44,10 @@ export default function BusinessForm({ business }) {
                     />
                 </Field>
 
-                <Field label="TIN" error={errors.tin}>
+                <Field
+                    label="Tax Identification Number (TIN)"
+                    error={errors.tin}
+                >
                     <Input
                         id="tin"
                         value={data.tin}
@@ -112,7 +115,7 @@ export default function BusinessForm({ business }) {
                     />
                 </Field>
 
-                <Field label="LGA" error={errors.lga}>
+                <Field label="Local Government Area (LGA)" error={errors.lga}>
                     <Input
                         id="lga"
                         value={data.lga}

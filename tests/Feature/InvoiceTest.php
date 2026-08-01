@@ -374,13 +374,37 @@ test('issued invoice payment status can be updated', function () {
 
 test('B2B invoices require customer tin', function () {
     $setup = invoiceSetup();
-    $setup['customer']->update(['tin' => null]);
+    $setup['customer']->update(['customer_type' => 'business', 'tin' => null]);
 
     $this->actingAs($setup['user'])
         ->post(route('invoices.store'), invoicePayload($setup['customer'], $setup['product'], [
             'invoice_kind' => Invoice::KIND_B2B,
         ]))
         ->assertSessionHasErrors('customer_id');
+});
+
+test('individual customers can be invoiced without tin', function () {
+    $setup = invoiceSetup();
+    $setup['customer']->update([
+        'customer_type' => 'individual',
+        'tin' => null,
+        'business_description' => null,
+    ]);
+
+    $invoice = createInvoiceFor(
+        $setup['user'],
+        $setup['customer'],
+        $setup['product'],
+        ['invoice_kind' => Invoice::KIND_B2C],
+    );
+
+    $this->actingAs($setup['user'])
+        ->post(route('invoices.issue', $invoice))
+        ->assertRedirect(route('invoices.show', $invoice));
+
+    expect($invoice->refresh()->status)->toBe(Invoice::STATUS_ISSUED)
+        ->and($invoice->customerSnapshot->tin)->toBeNull()
+        ->and($invoice->customerSnapshot->business_description)->toBeNull();
 });
 
 test('invoice validation rejects invalid line inputs and unclassified products', function () {

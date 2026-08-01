@@ -28,7 +28,6 @@ class InvoiceController extends Controller
         $search = $request->string('search')->toString();
         $status = $request->string('status')->toString();
         $paymentStatus = $request->string('payment_status')->toString();
-        $customerId = $request->string('customer_id')->toString();
         $issueDateFrom = $request->string('issue_date_from')->toString();
         $issueDateTo = $request->string('issue_date_to')->toString();
 
@@ -42,7 +41,6 @@ class InvoiceController extends Controller
             })
             ->when($status !== '', fn ($query) => $query->where('status', $status))
             ->when($paymentStatus !== '', fn ($query) => $query->where('payment_status', $paymentStatus))
-            ->when($customerId !== '', fn ($query) => $query->where('customer_id', $customerId))
             ->when($issueDateFrom !== '', fn ($query) => $query->whereDate('issue_date', '>=', $issueDateFrom))
             ->when($issueDateTo !== '', fn ($query) => $query->whereDate('issue_date', '<=', $issueDateTo))
             ->latest()
@@ -58,12 +56,10 @@ class InvoiceController extends Controller
                 'outstanding' => (float) $user->invoices()->where('status', Invoice::STATUS_ISSUED)
                     ->where('payment_status', '!=', Invoice::PAYMENT_PAID)->sum('payable_amount'),
             ],
-            'customers' => $this->customerOptions($user),
             'filters' => [
                 'search' => $search,
                 'status' => $status,
                 'payment_status' => $paymentStatus,
-                'customer_id' => $customerId,
                 'issue_date_from' => $issueDateFrom,
                 'issue_date_to' => $issueDateTo,
             ],
@@ -214,14 +210,14 @@ class InvoiceController extends Controller
     }
 
     /**
-     * @return list<array{id: int, name: string, customer_code: string, tin: string|null}>
+     * @return list<array{id: int, name: string, customer_code: string, customer_type: string, tin: string|null}>
      */
     private function customerOptions(User $user): array
     {
         $customers = $user->customers()
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'customer_code', 'tin']);
+            ->get(['id', 'name', 'customer_code', 'customer_type', 'tin']);
 
         $options = [];
 
@@ -230,6 +226,7 @@ class InvoiceController extends Controller
                 'id' => (int) $customer->id,
                 'name' => (string) $customer->name,
                 'customer_code' => (string) $customer->customer_code,
+                'customer_type' => (string) $customer->customer_type,
                 'tin' => $customer->tin === null ? null : (string) $customer->tin,
             ];
         }

@@ -15,7 +15,6 @@ function customerPayload(array $overrides = []): array
         'email' => 'buyer@acme.test',
         'phone' => '08012345678',
         'tin' => 'TIN-12345',
-        'business_description' => 'Retail customer.',
         'street' => '12 Marina Road',
         'city' => 'Lagos',
         'lga' => 'Lagos Island',
@@ -42,6 +41,31 @@ test('authenticated user can create a customer', function () {
         ->and($customer->name)->toBe('Acme Stores')
         ->and($customer->email)->toBe('buyer@acme.test')
         ->and($customer->is_active)->toBeTrue();
+});
+
+test('individual customer tin is optional and business description is omitted', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('customers.store'), customerPayload([
+        'customer_type' => 'individual',
+        'tin' => null,
+    ]))->assertRedirect();
+
+    $customer = Customer::query()->firstOrFail();
+
+    expect($customer->tin)->toBeNull()
+        ->and($customer->business_description)->toBeNull();
+});
+
+test('individual customer may have a tin', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post(route('customers.store'), customerPayload([
+        'customer_type' => 'individual',
+        'tin' => 'INDIVIDUAL-TIN',
+    ]))->assertRedirect();
+
+    expect(Customer::query()->firstOrFail()->tin)->toBe('INDIVIDUAL-TIN');
 });
 
 test('customer codes are sequential', function () {

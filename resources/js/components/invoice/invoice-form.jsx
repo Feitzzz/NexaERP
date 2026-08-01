@@ -1,6 +1,6 @@
 import { Link, useForm } from '@inertiajs/react';
-import { Plus, Trash2 } from 'lucide-react';
-import { useMemo } from 'react';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,7 @@ export default function InvoiceForm({
     today = null,
 }) {
     const isEditing = Boolean(invoice);
+    const [customerSearch, setCustomerSearch] = useState('');
     const productById = useMemo(
         () =>
             products.reduce((lookup, product) => {
@@ -32,6 +33,27 @@ export default function InvoiceForm({
             }, {}),
         [products],
     );
+    const customerById = useMemo(
+        () =>
+            customers.reduce((lookup, customer) => {
+                lookup[String(customer.id)] = customer;
+                return lookup;
+            }, {}),
+        [customers],
+    );
+    const filteredCustomers = useMemo(() => {
+        const query = customerSearch.trim().toLowerCase();
+
+        if (!query) {
+            return customers;
+        }
+
+        return customers.filter((customer) =>
+            [customer.name, customer.customer_code, customer.tin]
+                .filter(Boolean)
+                .some((value) => String(value).toLowerCase().includes(query)),
+        );
+    }, [customerSearch, customers]);
 
     const { data, setData, post, put, processing, errors } = useForm({
         customer_id: invoice?.customer_id ? String(invoice.customer_id) : '',
@@ -110,7 +132,9 @@ export default function InvoiceForm({
             <div className="grid gap-6 md:grid-cols-2">
                 <div className="md:col-span-2">
                     <h2 className="font-semibold">Invoice information</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Customer, document dates, warehouse and currency.</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Customer, document dates, warehouse and currency.
+                    </p>
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="warehouse_id">Warehouse</Label>
@@ -147,15 +171,42 @@ export default function InvoiceForm({
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="customer_id">Customer</Label>
+                    <div className="relative">
+                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            className="pl-9"
+                            value={customerSearch}
+                            onChange={(event) =>
+                                setCustomerSearch(event.target.value)
+                            }
+                            placeholder="Search customers by name, code or TIN…"
+                            aria-label="Search customers"
+                        />
+                    </div>
                     <Select
                         value={data.customer_id}
-                        onValueChange={(value) => setData('customer_id', value)}
+                        onValueChange={(value) => {
+                            const customerType =
+                                customerById[value]?.customer_type;
+                            const invoiceKind = {
+                                individual: 'B2C',
+                                business: 'B2B',
+                                government: 'B2G',
+                            }[customerType];
+
+                            setData({
+                                ...data,
+                                customer_id: value,
+                                invoice_kind: invoiceKind ?? data.invoice_kind,
+                            });
+                            setCustomerSearch('');
+                        }}
                     >
                         <SelectTrigger id="customer_id" className="w-full">
                             <SelectValue placeholder="Select customer" />
                         </SelectTrigger>
                         <SelectContent>
-                            {customers.map((customer) => (
+                            {filteredCustomers.map((customer) => (
                                 <SelectItem
                                     key={customer.id}
                                     value={String(customer.id)}
@@ -163,13 +214,20 @@ export default function InvoiceForm({
                                     {customer.name} ({customer.customer_code})
                                 </SelectItem>
                             ))}
+                            {filteredCustomers.length === 0 && (
+                                <SelectItem value="no-results" disabled>
+                                    No matching customers
+                                </SelectItem>
+                            )}
                         </SelectContent>
                     </Select>
                     <InputError message={errors.customer_id} />
                 </div>
 
                 <div className="grid gap-2">
-                    <Label htmlFor="invoice_kind">Invoice Kind</Label>
+                    <Label htmlFor="invoice_kind">
+                        Who is this invoice for?
+                    </Label>
                     <Select
                         value={data.invoice_kind}
                         onValueChange={(value) =>
@@ -180,9 +238,15 @@ export default function InvoiceForm({
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="B2B">B2B</SelectItem>
-                            <SelectItem value="B2C">B2C</SelectItem>
-                            <SelectItem value="B2G">B2G</SelectItem>
+                            <SelectItem value="B2B">
+                                Business to business (B2B)
+                            </SelectItem>
+                            <SelectItem value="B2C">
+                                Business to individual customer (B2C)
+                            </SelectItem>
+                            <SelectItem value="B2G">
+                                Business to government (B2G)
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                     <InputError message={errors.invoice_kind} />

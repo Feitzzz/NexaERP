@@ -1,4 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
+import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -6,12 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
 
 type Props = {
     passwordRules: string;
 };
+
+type JourneyProps = Props & {
+    processing: boolean;
+    errors: Record<string, string>;
+};
+
+const steps = [
+    { title: 'Your account', description: 'Create secure sign-in details.' },
+    { title: 'Your business', description: 'Tell us about your business.' },
+    {
+        title: 'Your location',
+        description: 'Add an optional business address.',
+    },
+];
 
 export default function Register({ passwordRules }: Props) {
     return (
@@ -24,296 +41,354 @@ export default function Register({ passwordRules }: Props) {
                 className="flex flex-col gap-6"
             >
                 {({ processing, errors }) => (
-                    <>
-                        <div className="grid gap-6">
-                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
-                                <div>
-                                    <h2 className="text-base font-semibold">
-                                        Account
-                                    </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        These details let you sign in and
-                                        identify your business.
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Business name</Label>
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="name"
-                                        name="name"
-                                        placeholder="Nexa Trading Ltd"
-                                    />
-                                    <InputError
-                                        message={errors.name}
-                                        className="mt-2"
-                                    />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="email"
-                                        name="email"
-                                        placeholder="email@example.com"
-                                    />
-                                    <InputError message={errors.email} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password">Password</Label>
-                                    <PasswordInput
-                                        id="password"
-                                        required
-                                        tabIndex={3}
-                                        autoComplete="new-password"
-                                        name="password"
-                                        placeholder="Password"
-                                        passwordrules={passwordRules}
-                                    />
-                                    <InputError message={errors.password} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">
-                                        Confirm password
-                                    </Label>
-                                    <PasswordInput
-                                        id="password_confirmation"
-                                        required
-                                        tabIndex={4}
-                                        autoComplete="new-password"
-                                        name="password_confirmation"
-                                        placeholder="Confirm password"
-                                        passwordrules={passwordRules}
-                                    />
-                                    <InputError
-                                        message={errors.password_confirmation}
-                                    />
-                                </div>
-                            </section>
-
-                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
-                                <div>
-                                    <h2 className="text-base font-semibold">
-                                        Business profile
-                                    </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        Optional details can be completed later
-                                        from your business profile.
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="tin">
-                                            TIN{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="tin"
-                                            type="text"
-                                            tabIndex={5}
-                                            name="tin"
-                                            placeholder="Tax identification number"
-                                        />
-                                        <InputError message={errors.tin} />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="phone">
-                                            Phone{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="phone"
-                                            type="tel"
-                                            tabIndex={6}
-                                            autoComplete="tel"
-                                            name="phone"
-                                            placeholder="08012345678"
-                                        />
-                                        <InputError message={errors.phone} />
-                                    </div>
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="business_description">
-                                        Business description{' '}
-                                        <span className="font-normal text-muted-foreground">
-                                            optional
-                                        </span>
-                                    </Label>
-                                    <textarea
-                                        id="business_description"
-                                        name="business_description"
-                                        tabIndex={7}
-                                        className="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-                                        placeholder="A short summary of what your business does"
-                                    />
-                                    <InputError
-                                        message={errors.business_description}
-                                    />
-                                </div>
-                            </section>
-
-                            <section className="grid gap-4 rounded-lg border bg-muted/15 p-4 sm:p-5">
-                                <div>
-                                    <h2 className="text-base font-semibold">
-                                        Address
-                                    </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        Optional. If you add an address now,
-                                        include street, city, state, and
-                                        country.
-                                    </p>
-                                </div>
-
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="grid gap-2 sm:col-span-2">
-                                        <Label htmlFor="street">
-                                            Street{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="street"
-                                            type="text"
-                                            tabIndex={8}
-                                            name="street"
-                                            placeholder="12 Marina Road"
-                                        />
-                                        <InputError message={errors.street} />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="city">
-                                            City{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="city"
-                                            type="text"
-                                            tabIndex={9}
-                                            name="city"
-                                            placeholder="Lagos"
-                                        />
-                                        <InputError message={errors.city} />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="lga">
-                                            LGA{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="lga"
-                                            type="text"
-                                            tabIndex={10}
-                                            name="lga"
-                                            placeholder="Lagos Island"
-                                        />
-                                        <InputError message={errors.lga} />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="state">
-                                            State{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="state"
-                                            type="text"
-                                            tabIndex={11}
-                                            name="state"
-                                            placeholder="Lagos"
-                                        />
-                                        <InputError message={errors.state} />
-                                    </div>
-
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="postal_code">
-                                            Postal code{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="postal_code"
-                                            type="text"
-                                            tabIndex={12}
-                                            name="postal_code"
-                                            placeholder="100001"
-                                        />
-                                        <InputError
-                                            message={errors.postal_code}
-                                        />
-                                    </div>
-
-                                    <div className="grid gap-2 sm:col-span-2">
-                                        <Label htmlFor="country">
-                                            Country{' '}
-                                            <span className="font-normal text-muted-foreground">
-                                                optional
-                                            </span>
-                                        </Label>
-                                        <Input
-                                            id="country"
-                                            type="text"
-                                            tabIndex={13}
-                                            name="country"
-                                            placeholder="Nigeria"
-                                        />
-                                        <InputError message={errors.country} />
-                                    </div>
-                                </div>
-                            </section>
-
-                            <Button
-                                type="submit"
-                                className="mt-2 w-full"
-                                tabIndex={14}
-                                data-test="register-user-button"
-                            >
-                                {processing && <Spinner />}
-                                Create account
-                            </Button>
-                        </div>
-
-                        <div className="text-center text-sm text-muted-foreground">
-                            Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={15}>
-                                Log in
-                            </TextLink>
-                        </div>
-                    </>
+                    <RegistrationJourney
+                        passwordRules={passwordRules}
+                        processing={processing}
+                        errors={errors}
+                    />
                 )}
             </Form>
         </>
     );
 }
 
+function RegistrationJourney({
+    passwordRules,
+    processing,
+    errors,
+}: JourneyProps) {
+    const [step, setStep] = useState(0);
+
+    useEffect(() => {
+        const fieldsByStep = [
+            ['name', 'email', 'password', 'password_confirmation'],
+            ['tin', 'phone', 'business_description'],
+            ['street', 'city', 'lga', 'state', 'postal_code', 'country'],
+        ];
+        const errorStep = fieldsByStep.findIndex((fields) =>
+            fields.some((field) => errors[field]),
+        );
+
+        if (errorStep >= 0) {
+            setStep(errorStep);
+        }
+    }, [errors]);
+
+    function continueJourney(event: React.MouseEvent<HTMLButtonElement>) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const section = document.querySelector<HTMLElement>(
+            `[data-registration-step="${step}"]`,
+        );
+        const fields = Array.from(
+            section?.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+                'input, textarea',
+            ) ?? [],
+        );
+        const invalidField = fields.find((field) => !field.checkValidity());
+
+        if (invalidField) {
+            invalidField.reportValidity();
+            invalidField.focus();
+            return;
+        }
+
+        setStep((current) => Math.min(current + 1, steps.length - 1));
+    }
+
+    return (
+        <>
+            <div>
+                <div className="mb-3 flex items-center justify-between text-xs font-medium text-muted-foreground">
+                    <span>
+                        Step {step + 1} of {steps.length}
+                    </span>
+                    <span>
+                        {Math.round(((step + 1) / steps.length) * 100)}%
+                    </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                        className="h-full rounded-full bg-primary transition-[width] duration-300"
+                        style={{
+                            width: `${((step + 1) / steps.length) * 100}%`,
+                        }}
+                    />
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                    {steps.map((item, index) => (
+                        <button
+                            key={item.title}
+                            type="button"
+                            onClick={() => index < step && setStep(index)}
+                            disabled={index > step}
+                            className={cn(
+                                'flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors',
+                                index === step && 'bg-primary/10 text-primary',
+                                index < step &&
+                                    'text-foreground hover:bg-muted',
+                                index > step && 'text-muted-foreground/60',
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    'flex size-6 shrink-0 items-center justify-center rounded-full border text-xs',
+                                    index <= step && 'border-primary',
+                                    index < step &&
+                                        'bg-primary text-primary-foreground',
+                                )}
+                            >
+                                {index < step ? (
+                                    <Check className="size-3.5" />
+                                ) : (
+                                    index + 1
+                                )}
+                            </span>
+                            <span className="hidden truncate text-xs font-medium sm:block">
+                                {item.title}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <section
+                data-registration-step="0"
+                className={cn('grid gap-5', step !== 0 && 'hidden')}
+            >
+                <StepHeading step={0} />
+                <Field label="Business name" error={errors.name}>
+                    <Input
+                        id="name"
+                        name="name"
+                        required
+                        autoFocus
+                        autoComplete="organization"
+                        placeholder="Nexa Trading Ltd"
+                    />
+                </Field>
+                <Field label="Email address" error={errors.email}>
+                    <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        autoComplete="email"
+                        placeholder="email@example.com"
+                    />
+                </Field>
+                <Field label="Password" error={errors.password}>
+                    <PasswordInput
+                        id="password"
+                        name="password"
+                        required
+                        autoComplete="new-password"
+                        placeholder="Create a password"
+                        passwordrules={passwordRules}
+                    />
+                </Field>
+                <Field
+                    label="Confirm password"
+                    error={errors.password_confirmation}
+                >
+                    <PasswordInput
+                        id="password_confirmation"
+                        name="password_confirmation"
+                        required
+                        autoComplete="new-password"
+                        placeholder="Repeat your password"
+                        passwordrules={passwordRules}
+                    />
+                </Field>
+            </section>
+
+            <section
+                data-registration-step="1"
+                className={cn('grid gap-5', step !== 1 && 'hidden')}
+            >
+                <StepHeading step={1} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Field
+                        label="Tax Identification Number (TIN) · optional"
+                        error={errors.tin}
+                    >
+                        <Input
+                            id="tin"
+                            name="tin"
+                            placeholder="Enter tax number"
+                        />
+                    </Field>
+                    <Field label="Phone number · optional" error={errors.phone}>
+                        <Input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            autoComplete="tel"
+                            placeholder="08012345678"
+                        />
+                    </Field>
+                </div>
+                <Field
+                    label="What does your business do? · optional"
+                    error={errors.business_description}
+                >
+                    <textarea
+                        id="business_description"
+                        name="business_description"
+                        className="min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        placeholder="For example: We sell household goods to retailers"
+                    />
+                </Field>
+                <p className="rounded-lg bg-muted/50 px-3 py-2 text-xs leading-5 text-muted-foreground">
+                    You can skip these details and complete your business
+                    profile later.
+                </p>
+            </section>
+
+            <section
+                data-registration-step="2"
+                className={cn('grid gap-5', step !== 2 && 'hidden')}
+            >
+                <StepHeading step={2} />
+                <p className="text-xs leading-5 text-muted-foreground">
+                    The address is optional. If you start entering it, include
+                    street, city, state, and country.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                        <Field
+                            label="Street address · optional"
+                            error={errors.street}
+                        >
+                            <Input
+                                id="street"
+                                name="street"
+                                autoComplete="street-address"
+                                placeholder="12 Marina Road"
+                            />
+                        </Field>
+                    </div>
+                    <Field label="City · optional" error={errors.city}>
+                        <Input
+                            id="city"
+                            name="city"
+                            autoComplete="address-level2"
+                            placeholder="Lagos"
+                        />
+                    </Field>
+                    <Field
+                        label="Local Government Area (LGA) · optional"
+                        error={errors.lga}
+                    >
+                        <Input id="lga" name="lga" placeholder="Lagos Island" />
+                    </Field>
+                    <Field label="State · optional" error={errors.state}>
+                        <Input
+                            id="state"
+                            name="state"
+                            autoComplete="address-level1"
+                            placeholder="Lagos"
+                        />
+                    </Field>
+                    <Field
+                        label="Postal code · optional"
+                        error={errors.postal_code}
+                    >
+                        <Input
+                            id="postal_code"
+                            name="postal_code"
+                            autoComplete="postal-code"
+                            placeholder="100001"
+                        />
+                    </Field>
+                    <div className="sm:col-span-2">
+                        <Field
+                            label="Country · optional"
+                            error={errors.country}
+                        >
+                            <Input
+                                id="country"
+                                name="country"
+                                autoComplete="country-name"
+                                placeholder="Nigeria"
+                            />
+                        </Field>
+                    </div>
+                </div>
+            </section>
+
+            <div className="flex items-center gap-3 border-t pt-5">
+                {step > 0 && (
+                    <Button
+                        key="continue-registration"
+                        type="button"
+                        variant="outline"
+                        onClick={() => setStep((current) => current - 1)}
+                    >
+                        <ArrowLeft /> Back
+                    </Button>
+                )}
+                {step < steps.length - 1 ? (
+                    <Button
+                        type="button"
+                        className="ml-auto"
+                        onClick={continueJourney}
+                    >
+                        Continue <ArrowRight />
+                    </Button>
+                ) : (
+                    <Button
+                        key="submit-registration"
+                        type="submit"
+                        className="ml-auto"
+                        data-test="register-user-button"
+                    >
+                        {processing && <Spinner />}
+                        Create my workspace
+                    </Button>
+                )}
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+                Already have an account?{' '}
+                <TextLink href={login()}>Log in</TextLink>
+            </div>
+        </>
+    );
+}
+
+function StepHeading({ step }: { step: number }) {
+    return (
+        <div>
+            <h2 className="text-lg font-semibold">{steps[step].title}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+                {steps[step].description}
+            </p>
+        </div>
+    );
+}
+
+function Field({
+    label,
+    error,
+    children,
+}: {
+    label: string;
+    error?: string;
+    children: React.ReactElement<{ id: string }>;
+}) {
+    return (
+        <div className="grid gap-2">
+            <Label htmlFor={children.props.id}>{label}</Label>
+            {children}
+            <InputError message={error} />
+        </div>
+    );
+}
+
 Register.layout = {
     title: 'Create your NexaERP workspace',
-    description: 'Set up your secure business account. You can refine the optional profile details at any time.',
+    description:
+        'Three short steps to get your business ready. You can update optional details later.',
 };
