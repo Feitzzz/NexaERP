@@ -1,6 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -30,6 +30,12 @@ const steps = [
     },
 ];
 
+const fieldsByStep = [
+    ['name', 'email', 'password', 'password_confirmation'],
+    ['tin', 'phone', 'business_description'],
+    ['street', 'city', 'lga', 'state', 'postal_code', 'country'],
+];
+
 export default function Register({ passwordRules }: Props) {
     return (
         <>
@@ -42,6 +48,7 @@ export default function Register({ passwordRules }: Props) {
             >
                 {({ processing, errors }) => (
                     <RegistrationJourney
+                        key={Object.keys(errors).sort().join(',')}
                         passwordRules={passwordRules}
                         processing={processing}
                         errors={errors}
@@ -57,22 +64,13 @@ function RegistrationJourney({
     processing,
     errors,
 }: JourneyProps) {
-    const [step, setStep] = useState(0);
-
-    useEffect(() => {
-        const fieldsByStep = [
-            ['name', 'email', 'password', 'password_confirmation'],
-            ['tin', 'phone', 'business_description'],
-            ['street', 'city', 'lga', 'state', 'postal_code', 'country'],
-        ];
+    const [step, setStep] = useState(() => {
         const errorStep = fieldsByStep.findIndex((fields) =>
             fields.some((field) => errors[field]),
         );
 
-        if (errorStep >= 0) {
-            setStep(errorStep);
-        }
-    }, [errors]);
+        return Math.max(errorStep, 0);
+    });
 
     function continueJourney(event: React.MouseEvent<HTMLButtonElement>) {
         event.preventDefault();
@@ -91,6 +89,7 @@ function RegistrationJourney({
         if (invalidField) {
             invalidField.reportValidity();
             invalidField.focus();
+
             return;
         }
 

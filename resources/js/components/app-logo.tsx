@@ -12,7 +12,9 @@ export default function AppLogo() {
                 <span className="mb-0.5 truncate leading-tight font-semibold">
                     NexaERP
                 </span>
-                <span className="truncate text-[11px] leading-tight text-muted-foreground">{auth.user?.name}</span>
+                <span className="truncate text-[11px] leading-tight text-muted-foreground">
+                    {auth.user?.name}
+                </span>
             </div>
         </>
     );

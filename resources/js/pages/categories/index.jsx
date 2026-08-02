@@ -1,20 +1,222 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { FolderTree, Pencil, Plus, Power, Search, Trash2, X } from 'lucide-react';
+import {
+    FolderTree,
+    Pencil,
+    Plus,
+    Power,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
-import { DataPanel, EmptyTable, PageHeader, Pagination, StatusPill } from '@/components/page-primitives';
+import {
+    DataPanel,
+    EmptyTable,
+    PageHeader,
+    Pagination,
+    StatusPill,
+} from '@/components/page-primitives';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function Index({ categories, filters }) {
     const [search, setSearch] = useState(filters.search ?? '');
     const errors = usePage().props.errors ?? {};
-    const submit = (event) => { event.preventDefault(); router.get('/categories', { search }, { preserveState: true, replace: true }); };
-    const clear = () => { setSearch(''); router.get('/categories'); };
-    const destroy = (category) => confirm(`Delete ${category.name}?`) && router.delete(`/categories/${category.id}`, { preserveScroll: true });
-    const toggleStatus = (category) => router.patch(`/categories/${category.id}/status`, {}, { preserveScroll: true });
-    return <><Head title="Categories" /><div className="nexa-page"><PageHeader title="Categories" description="Organize related products and services in your catalogue."><Button asChild><Link href="/categories/create"><Plus />New category</Link></Button></PageHeader><form onSubmit={submit} className="nexa-card flex max-w-2xl gap-2 p-3"><div className="relative flex-1"><Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search categories…" /></div>{filters.search && <Button type="button" size="icon" variant="ghost" onClick={clear}><X /></Button>}<Button variant="outline">Search</Button></form><InputError message={errors.category} /><DataPanel title="Product categories" description="Catalogue grouping and item usage" count={categories.total}><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><Th>Category</Th><Th>Description</Th><Th>Products</Th><Th>Status</Th><Th className="text-right">Actions</Th></tr></thead><tbody>{!categories.data.length && <EmptyTable colSpan={5} icon={FolderTree} title={filters.search ? 'No matching categories' : 'No categories yet'} description={filters.search ? 'Try a different category name.' : 'Create categories to keep the product catalogue organized.'} href={!filters.search ? '/categories/create' : undefined} action="Create category" />}{categories.data.map((category) => <tr key={category.id} className="border-t"><Td><span className="inline-flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-muted/60"><FolderTree className="size-4 text-muted-foreground" /></span><span className="font-medium text-foreground">{category.name}</span></span></Td><Td className="max-w-lg text-muted-foreground">{category.description || 'No description provided'}</Td><Td><span className="font-semibold">{category.products_count}</span> <span className="text-xs text-muted-foreground">items</span></Td><Td><StatusPill status={category.is_active ? 'Active' : 'Inactive'} /></Td><Td><div className="flex justify-end gap-1"><Button variant="ghost" size="icon" asChild><Link href={`/categories/${category.id}/edit`}><Pencil /></Link></Button><Button variant="ghost" size="icon" onClick={() => toggleStatus(category)}><Power /></Button><Button variant="ghost" size="icon" className="hover:text-destructive" onClick={() => destroy(category)}><Trash2 /></Button></div></Td></tr>)}</tbody></table></div></DataPanel><Pagination links={categories.links} from={categories.from} to={categories.to} total={categories.total} /></div></>;
+    const submit = (event) => {
+        event.preventDefault();
+        router.get(
+            '/categories',
+            { search },
+            { preserveState: true, replace: true },
+        );
+    };
+    const clear = () => {
+        setSearch('');
+        router.get('/categories');
+    };
+    const destroy = (category) =>
+        confirm(`Delete ${category.name}?`) &&
+        router.delete(`/categories/${category.id}`, { preserveScroll: true });
+    const toggleStatus = (category) =>
+        router.patch(
+            `/categories/${category.id}/status`,
+            {},
+            { preserveScroll: true },
+        );
+    return (
+        <>
+            <Head title="Categories" />
+            <div className="nexa-page">
+                <PageHeader
+                    title="Categories"
+                    description="Organize related products and services in your catalogue."
+                >
+                    <Button asChild>
+                        <Link href="/categories/create">
+                            <Plus />
+                            New category
+                        </Link>
+                    </Button>
+                </PageHeader>
+                <form
+                    onSubmit={submit}
+                    className="nexa-card flex max-w-2xl gap-2 p-3"
+                >
+                    <div className="relative flex-1">
+                        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            className="pl-9"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Search categories…"
+                        />
+                    </div>
+                    {filters.search && (
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={clear}
+                        >
+                            <X />
+                        </Button>
+                    )}
+                    <Button variant="outline">Search</Button>
+                </form>
+                <InputError message={errors.category} />
+                <DataPanel
+                    title="Product categories"
+                    description="Catalogue grouping and item usage"
+                    count={categories.total}
+                >
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead>
+                                <tr>
+                                    <Th>Category</Th>
+                                    <Th>Description</Th>
+                                    <Th>Products</Th>
+                                    <Th>Status</Th>
+                                    <Th className="text-right">Actions</Th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {!categories.data.length && (
+                                    <EmptyTable
+                                        colSpan={5}
+                                        icon={FolderTree}
+                                        title={
+                                            filters.search
+                                                ? 'No matching categories'
+                                                : 'No categories yet'
+                                        }
+                                        description={
+                                            filters.search
+                                                ? 'Try a different category name.'
+                                                : 'Create categories to keep the product catalogue organized.'
+                                        }
+                                        href={
+                                            !filters.search
+                                                ? '/categories/create'
+                                                : undefined
+                                        }
+                                        action="Create category"
+                                    />
+                                )}
+                                {categories.data.map((category) => (
+                                    <tr key={category.id} className="border-t">
+                                        <Td>
+                                            <span className="inline-flex items-center gap-3">
+                                                <span className="flex size-9 items-center justify-center rounded-lg bg-muted/60">
+                                                    <FolderTree className="size-4 text-muted-foreground" />
+                                                </span>
+                                                <span className="font-medium text-foreground">
+                                                    {category.name}
+                                                </span>
+                                            </span>
+                                        </Td>
+                                        <Td className="max-w-lg text-muted-foreground">
+                                            {category.description ||
+                                                'No description provided'}
+                                        </Td>
+                                        <Td>
+                                            <span className="font-semibold">
+                                                {category.products_count}
+                                            </span>{' '}
+                                            <span className="text-xs text-muted-foreground">
+                                                items
+                                            </span>
+                                        </Td>
+                                        <Td>
+                                            <StatusPill
+                                                status={
+                                                    category.is_active
+                                                        ? 'Active'
+                                                        : 'Inactive'
+                                                }
+                                            />
+                                        </Td>
+                                        <Td>
+                                            <div className="flex justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`/categories/${category.id}/edit`}
+                                                    >
+                                                        <Pencil />
+                                                    </Link>
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        toggleStatus(category)
+                                                    }
+                                                >
+                                                    <Power />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="hover:text-destructive"
+                                                    onClick={() =>
+                                                        destroy(category)
+                                                    }
+                                                >
+                                                    <Trash2 />
+                                                </Button>
+                                            </div>
+                                        </Td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </DataPanel>
+                <Pagination
+                    links={categories.links}
+                    from={categories.from}
+                    to={categories.to}
+                    total={categories.total}
+                />
+            </div>
+        </>
+    );
 }
-function Th({ children, className = '' }) { return <th className={`px-5 py-3 font-medium whitespace-nowrap ${className}`}>{children}</th>; }
-function Td({ children, className = '' }) { return <td className={`px-5 py-3.5 align-middle ${className}`}>{children}</td>; }
+function Th({ children, className = '' }) {
+    return (
+        <th className={`px-5 py-3 font-medium whitespace-nowrap ${className}`}>
+            {children}
+        </th>
+    );
+}
+function Td({ children, className = '' }) {
+    return (
+        <td className={`px-5 py-3.5 align-middle ${className}`}>{children}</td>
+    );
+}
 Index.layout = { breadcrumbs: [{ title: 'Categories', href: '/categories' }] };

@@ -59,30 +59,39 @@ export default function Show({ invoice }) {
             <Head title={invoice.invoice_number} />
 
             <div className="nexa-page">
-                <Link href="/invoices" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Invoices</Link>
-                <PageHeader title={invoice.invoice_number} description={`${invoice.invoice_kind} sales invoice · ${invoice.customer.name}`}>
-                        {isDraft && (
-                            <>
-                                <Button variant="outline" asChild>
-                                    <Link href={`/invoices/${invoice.id}/edit`}>
-                                        <Pencil />
-                                        Edit
-                                    </Link>
-                                </Button>
-                                <Button type="button" onClick={issue}>
-                                    <Send />
-                                    Issue
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={destroy}
-                                >
-                                    <Trash2 />
-                                    Delete
-                                </Button>
-                            </>
-                        )}
+                <Link
+                    href="/invoices"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                    <ArrowLeft className="size-4" />
+                    Invoices
+                </Link>
+                <PageHeader
+                    title={invoice.invoice_number}
+                    description={`${invoice.invoice_kind} sales invoice · ${invoice.customer.name}`}
+                >
+                    {isDraft && (
+                        <>
+                            <Button variant="outline" asChild>
+                                <Link href={`/invoices/${invoice.id}/edit`}>
+                                    <Pencil />
+                                    Edit
+                                </Link>
+                            </Button>
+                            <Button type="button" onClick={issue}>
+                                <Send />
+                                Issue
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={destroy}
+                            >
+                                <Trash2 />
+                                Delete
+                            </Button>
+                        </>
+                    )}
                 </PageHeader>
 
                 <InputError message={errors.invoice} />

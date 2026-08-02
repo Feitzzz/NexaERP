@@ -50,9 +50,13 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('h-10 w-full justify-start gap-2.5 rounded-lg px-3', {
-                                    'bg-muted text-foreground': isCurrentOrParentUrl(item.href),
-                                })}
+                                className={cn(
+                                    'h-10 w-full justify-start gap-2.5 rounded-lg px-3',
+                                    {
+                                        'bg-muted text-foreground':
+                                            isCurrentOrParentUrl(item.href),
+                                    },
+                                )}
                             >
                                 <Link href={item.href}>
                                     {item.icon && (

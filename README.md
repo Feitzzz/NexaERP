@@ -1,5 +1,14 @@
 # NexaERP
 
+## Continuous integration and production
+
+GitHub Actions validates formatting, static analysis, frontend compilation,
+PostgreSQL behavior, and the production Docker image on every pull request and
+push to `main`. Render or Laravel Cloud can then deploy only the successfully
+tested commit. See the [production deployment guide](docs/production-deployment.md)
+for platform setup, environment variables, branch protection, and the launch
+checklist.
+
 ## Docker development
 
 Build and start the application, Vite, and PostgreSQL:

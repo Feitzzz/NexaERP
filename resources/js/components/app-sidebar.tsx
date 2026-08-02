@@ -69,7 +69,11 @@ const configurationItems: NavItem[] = [
     },
     { title: 'Categories', href: '/categories', icon: Tags },
     { title: 'Warehouses', href: '/warehouses', icon: Warehouse },
-    { title: 'Stock Adjustments', href: '/inventory-adjustments', icon: ClipboardPenLine },
+    {
+        title: 'Stock Adjustments',
+        href: '/inventory-adjustments',
+        icon: ClipboardPenLine,
+    },
     { title: 'Business', href: '/business', icon: Building2 },
     {
         title: 'Settings',
@@ -80,7 +84,11 @@ const configurationItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="sidebar" className="border-r border-sidebar-border/80">
+        <Sidebar
+            collapsible="icon"
+            variant="sidebar"
+            className="border-r border-sidebar-border/80"
+        >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -100,7 +108,8 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <div className="mx-2 mb-2 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700 group-data-[collapsible=icon]:hidden dark:bg-emerald-950/40 dark:text-emerald-400">
-                    <span className="size-1.5 rounded-full bg-amber-500" /> NRS compliance in progress
+                    <span className="size-1.5 rounded-full bg-amber-500" /> NRS
+                    compliance in progress
                 </div>
                 <NavUser />
             </SidebarFooter>

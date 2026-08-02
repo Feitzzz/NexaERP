@@ -142,7 +142,13 @@
         font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     }
 
-    button, a, input, select, textarea { @apply focus-visible:outline-none; }
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        @apply focus-visible:outline-none;
+    }
 }
 
 @layer components {
@@ -152,17 +158,40 @@
         @apply w-full;
     }
 
-    main table tbody tr { @apply transition-colors hover:bg-muted/35; }
-    main table thead { @apply bg-muted/35 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase; }
-    main table th { @apply h-11; }
-    main table td { @apply border-border/70; }
-    main input, main textarea, main button[role='combobox'] { @apply bg-background shadow-none; }
-    main section, main .rounded-lg.border { @apply border-border/80 shadow-[0_1px_2px_rgba(15,23,42,0.025)]; }
+    main table tbody tr {
+        @apply transition-colors hover:bg-muted/35;
+    }
+    main table thead {
+        @apply bg-muted/35 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase;
+    }
+    main table th {
+        @apply h-11;
+    }
+    main table td {
+        @apply border-border/70;
+    }
+    main input,
+    main textarea,
+    main button[role='combobox'] {
+        @apply bg-background shadow-none;
+    }
+    main section,
+    main .rounded-lg.border {
+        @apply border-border/80 shadow-[0_1px_2px_rgba(15,23,42,0.025)];
+    }
 
-    .nexa-page { @apply mx-auto w-full max-w-[1440px] space-y-7 px-5 py-7 md:px-8 md:py-9; }
-    .nexa-card { @apply overflow-hidden rounded-xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.03)]; }
-    .nexa-card-header { @apply flex items-start justify-between gap-4 border-b px-5 py-4; }
-    .nexa-kicker { @apply text-sm font-medium text-muted-foreground; }
+    .nexa-page {
+        @apply mx-auto w-full max-w-[1440px] space-y-7 px-5 py-7 md:px-8 md:py-9;
+    }
+    .nexa-card {
+        @apply overflow-hidden rounded-xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(15,23,42,0.03)];
+    }
+    .nexa-card-header {
+        @apply flex items-start justify-between gap-4 border-b px-5 py-4;
+    }
+    .nexa-kicker {
+        @apply text-sm font-medium text-muted-foreground;
+    }
 }
 
 /* Legacy page containers use several max-width utilities; normalize their rhythm
@@ -175,7 +204,9 @@
 
 /* Workflow pages: page-specific markup stays intact, but each surface follows
    the same Stripe-like spacing and hierarchy as the dashboard reference. */
-[data-slot='sidebar-inset'] > .mx-auto[class*='max-w-'][class*='space-y-'] > form:not([class*='rounded']) {
+[data-slot='sidebar-inset']
+    > .mx-auto[class*='max-w-'][class*='space-y-']
+    > form:not([class*='rounded']) {
     padding: 1rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -183,8 +214,12 @@
     box-shadow: 0 1px 2px rgb(15 23 42 / 0.025);
 }
 
-[data-slot='sidebar-inset'] > .mx-auto[class*='max-w-'] > div[class*='overflow-hidden'][class*='border'],
-[data-slot='sidebar-inset'] > .mx-auto[class*='max-w-'] > div[class*='overflow-x-auto'][class*='border'] {
+[data-slot='sidebar-inset']
+    > .mx-auto[class*='max-w-']
+    > div[class*='overflow-hidden'][class*='border'],
+[data-slot='sidebar-inset']
+    > .mx-auto[class*='max-w-']
+    > div[class*='overflow-x-auto'][class*='border'] {
     border-radius: var(--radius-lg);
     background: var(--card);
     box-shadow: 0 1px 2px rgb(15 23 42 / 0.03);
