@@ -1,6 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -30,6 +30,12 @@ const steps = [
     },
 ];
 
+const fieldsByStep = [
+    ['name', 'email', 'password', 'password_confirmation'],
+    ['tin', 'phone', 'business_description'],
+    ['street', 'city', 'lga', 'state', 'postal_code', 'country'],
+];
+
 export default function Register({ passwordRules }: Props) {
     return (
         <>
@@ -57,22 +63,11 @@ function RegistrationJourney({
     processing,
     errors,
 }: JourneyProps) {
-    const [step, setStep] = useState(0);
-
-    useEffect(() => {
-        const fieldsByStep = [
-            ['name', 'email', 'password', 'password_confirmation'],
-            ['tin', 'phone', 'business_description'],
-            ['street', 'city', 'lga', 'state', 'postal_code', 'country'],
-        ];
-        const errorStep = fieldsByStep.findIndex((fields) =>
-            fields.some((field) => errors[field]),
-        );
-
-        if (errorStep >= 0) {
-            setStep(errorStep);
-        }
-    }, [errors]);
+    const [navigationStep, setNavigationStep] = useState(0);
+    const errorStep = fieldsByStep.findIndex((fields) =>
+        fields.some((field) => errors[field]),
+    );
+    const step = errorStep >= 0 ? errorStep : navigationStep;
 
     function continueJourney(event: React.MouseEvent<HTMLButtonElement>) {
         event.preventDefault();
@@ -91,10 +86,11 @@ function RegistrationJourney({
         if (invalidField) {
             invalidField.reportValidity();
             invalidField.focus();
+
             return;
         }
 
-        setStep((current) => Math.min(current + 1, steps.length - 1));
+        setNavigationStep(Math.min(step + 1, steps.length - 1));
     }
 
     return (
@@ -121,7 +117,9 @@ function RegistrationJourney({
                         <button
                             key={item.title}
                             type="button"
-                            onClick={() => index < step && setStep(index)}
+                            onClick={() =>
+                                index < step && setNavigationStep(index)
+                            }
                             disabled={index > step}
                             className={cn(
                                 'flex min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors',
@@ -324,7 +322,7 @@ function RegistrationJourney({
                         key="continue-registration"
                         type="button"
                         variant="outline"
-                        onClick={() => setStep((current) => current - 1)}
+                        onClick={() => setNavigationStep(step - 1)}
                     >
                         <ArrowLeft /> Back
                     </Button>
