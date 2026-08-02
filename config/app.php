@@ -54,6 +54,11 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'rate_limits' => [
+        'read_per_minute' => (int) env('APP_READ_RATE_LIMIT', 120),
+        'write_per_minute' => (int) env('APP_WRITE_RATE_LIMIT', 60),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
