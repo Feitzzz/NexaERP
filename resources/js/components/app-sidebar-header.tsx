@@ -1,9 +1,9 @@
 import { usePage } from '@inertiajs/react';
 import { Moon, Sun } from 'lucide-react';
+import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppearance } from '@/hooks/use-appearance';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({
     breadcrumbs = [],

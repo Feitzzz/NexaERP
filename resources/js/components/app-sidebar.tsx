@@ -13,6 +13,7 @@ import {
     PackageSearch,
     Settings,
 } from 'lucide-react';
+import type { NavItem } from '@/types';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -26,7 +27,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import type { NavItem } from '@/types';
 
 const workspaceItems: NavItem[] = [
     {

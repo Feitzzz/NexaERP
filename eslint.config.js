@@ -76,10 +76,22 @@ export default [
                     groups: [
                         'builtin',
                         'external',
+                        'type',
                         'internal',
                         'parent',
                         'sibling',
                         'index',
+                    ],
+                    pathGroups: [
+                        {
+                            pattern: '@/**',
+                            group: 'internal',
+                        },
+                    ],
+                    pathGroupsExcludedImportTypes: [
+                        'builtin',
+                        'external',
+                        'type',
                     ],
                     alphabetize: { order: 'asc', caseInsensitive: true },
                 },

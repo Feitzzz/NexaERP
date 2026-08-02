@@ -1,8 +1,8 @@
 import { ArrowLeft, BadgeCheck, FileText, PackageCheck, ShieldCheck } from 'lucide-react';
+import type { AuthLayoutProps } from '@/types';
 import { Brand, ThemeToggle } from '@/components/brand';
 import { cn } from '@/lib/utils';
 import { home } from '@/routes';
-import type { AuthLayoutProps } from '@/types';
 
 export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     const wide = title?.toLowerCase().startsWith('create');
