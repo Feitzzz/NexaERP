@@ -68,6 +68,9 @@ jobs:
       - name: Generate application key
         run: php artisan key:generate
 
+      - name: Generate Wayfinder TypeScript files
+        run: php artisan wayfinder:generate --with-form --no-interaction
+
       - name: Check PHP syntax
         run: find app bootstrap config database routes tests -type f -name '*.php' -print0 | xargs -0 -P 4 -n 1 php -l
 
