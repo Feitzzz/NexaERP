@@ -288,5 +288,5 @@ test('sales summary contains issued invoices only and is business scoped', funct
     $this->actingAs($setup['user'])->get(route('sales.index'))
         ->assertInertia(fn (Assert $page) => $page->component('sales/index')
             ->where('summary.issued_invoices', 1)
-            ->where('summary.total_sales', '100'));
+            ->where('summary.total_sales', '100.0000'));
 });

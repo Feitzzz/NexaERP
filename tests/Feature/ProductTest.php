@@ -77,7 +77,9 @@ test('PRODUCT gets a PRD SKU prefix', function () {
 
     $this->actingAs($user)->post(route('products.store'), productPayload($category, $unit));
 
-    expect(Product::query()->first()->sku)->toBe('PRD-000001');
+    $product = Product::query()->firstOrFail();
+
+    expect($product->sku)->toBe('PRD-'.str_pad((string) $product->id, 6, '0', STR_PAD_LEFT));
 });
 
 test('SERVICE gets an SRV SKU prefix', function () {
@@ -89,7 +91,9 @@ test('SERVICE gets an SRV SKU prefix', function () {
         'item_type' => Product::TYPE_SERVICE,
     ]));
 
-    expect(Product::query()->first()->sku)->toBe('SRV-000001');
+    $service = Product::query()->firstOrFail();
+
+    expect($service->sku)->toBe('SRV-'.str_pad((string) $service->id, 6, '0', STR_PAD_LEFT));
 });
 
 test('SKU generation produces expected zero padding', function () {
@@ -100,7 +104,9 @@ test('SKU generation produces expected zero padding', function () {
 
     $this->actingAs($user)->post(route('products.store'), productPayload($category, $unit));
 
-    expect(Product::query()->latest('id')->first()->sku)->toBe('PRD-000025');
+    $product = Product::query()->latest('id')->firstOrFail();
+
+    expect($product->sku)->toBe('PRD-'.str_pad((string) $product->id, 6, '0', STR_PAD_LEFT));
 });
 
 test('business cannot assign another business category', function () {

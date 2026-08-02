@@ -16,7 +16,7 @@ class SalesSummaryService
     public function summary(User $user, array $filters): array
     {
         $invoices = $this->issuedInvoices($user, $filters);
-        $total = (string) (clone $invoices)->sum('payable_amount');
+        $total = bcadd((string) (clone $invoices)->sum('payable_amount'), '0', 4);
         $count = (clone $invoices)->count();
         $invoiceIds = (clone $invoices)->select('invoices.id');
 
